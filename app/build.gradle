@@ -1,0 +1,57 @@
+plugins {
+    id 'com.android.application'
+}
+
+// Version und Update-Quelle kommen vom Release-Workflow (siehe .github/workflows/release.yml).
+def appVersionCode = (project.findProperty('appVersionCode') ?: '1') as Integer
+def appVersionName = (project.findProperty('appVersionName') ?: '0.0.1-dev') as String
+def updateRepo = System.getenv('GITHUB_REPOSITORY') ?: (project.findProperty('updateRepo') ?: '')
+def keystoreFile = System.getenv('KEYSTORE_FILE')
+
+android {
+    namespace 'app.kanadojo'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'app.kanadojo'
+        minSdk 26
+        targetSdk 34
+        versionCode appVersionCode
+        versionName appVersionName
+        buildConfigField 'String', 'UPDATE_REPO', "\"${updateRepo}\""
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    signingConfigs {
+        release {
+            if (keystoreFile) {
+                storeFile file(keystoreFile)
+                storePassword System.getenv('KEYSTORE_PASSWORD')
+                keyAlias 'kanadojo'
+                keyPassword System.getenv('KEYSTORE_PASSWORD')
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            if (keystoreFile) {
+                signingConfig signingConfigs.release
+            }
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
+    }
+}
