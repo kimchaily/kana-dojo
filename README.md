@@ -38,6 +38,14 @@ Google Play Protect blockiert die APK als «Harmful app», sehr wahrscheinlich w
 
 **APK:** Jeder manuelle Release-Lauf erzeugt Version `1.0.<Laufnummer>`. Die App prüft beim Start höchstens einmal pro Tag und unter *Mehr → App-Update* auf Wunsch, ob ein neueres Release existiert, lädt die APK und startet die Installation. Der Lernstand bleibt erhalten.
 
+## Backlog und Änderungswünsche
+
+Der Backlog sind die [GitHub-Issues](https://github.com/kimchaily/kana-dojo/issues) dieses Repos.
+
+- **In der App erfassen:** *Mehr → Wunsch oder Fehler melden*. Der Eintrag bleibt auf dem Gerät (auch offline). «In den Backlog (GitHub)» öffnet ein vorausgefülltes Issue, das nur noch abgeschickt werden muss. Es braucht kein Token in der App, nur ein angemeldetes GitHub im Browser.
+- **Labels:** `roadmap` für grössere Vorhaben, `enhancement` / `bug` / `content` für die Art, `aus-app` für Einträge aus der App.
+- **Abarbeiten:** Offene Issues sichten, umsetzen und im Commit mit `Closes #Nr` schliessen.
+
 ## Inhalte ändern
 
 Kana, Eselsbrücken und Startpakete stehen als Daten oben im Skript von `web/app.html` (`MH`, `MK`, `BUILTIN`). Nach einer Änderung genügt ein Push.

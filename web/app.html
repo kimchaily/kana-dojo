@@ -79,6 +79,8 @@ body.staged .nav{display:none}
 .btn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:9px 16px;font-weight:700;min-height:42px;display:inline-flex;align-items:center;gap:8px;justify-content:center}
 .btn.pri{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 .btn.ghost{background:none}
+a.btn{text-decoration:none;color:inherit}a.btn.pri{color:var(--on-accent)}
+.cr{display:flex;flex-direction:column;gap:8px;padding:10px 12px;border:1px solid var(--line);border-radius:12px}.cr.sent{opacity:.7}.cr p{margin:2px 0}
 .btn.wide{width:100%}
 .btn:disabled{opacity:.5;cursor:default}
 .ico{border:1px solid var(--line);background:var(--surface);border-radius:50%;width:42px;height:42px;display:inline-grid;place-items:center;flex:none;font-size:17px}
@@ -583,13 +585,14 @@ P('schilder','🏮','Schilder lesen','Katakana und Hiragana im Stadtbild',[
 
 /* ---------- Zustand ---------- */
 var KEY='kanadojo.v1',DAY=864e5,INT=[0,1,3,7,16,35];
-function def(){return{v:1,kana:{},learned:{h:[],k:[]},cards:{},packs:[],active:['basis','rest','veg'],cult:[],
+function def(){return{v:1,kana:{},learned:{h:[],k:[]},cards:{},packs:[],active:['basis','rest','veg'],cult:[],crs:[],
  set:{mode:'auto',skin:'ai',kana:'reveal',rate:0.85,auto:true,dir:'de',kscript:'h'},streak:{last:'',n:0},upd:0}}
 function load(){var d=def();try{var s=JSON.parse(localStorage.getItem(KEY)||'null');if(s&&typeof s==='object'){
   Object.keys(d).forEach(function(k){if(s[k]!=null)d[k]=(k==='set'||k==='learned')?Object.assign(d[k],s[k]):s[k]})}}catch(e){}return d}
 var S=load();
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
-var ui={tab:'home',script:S.set.kscript||'h',sel:null,stage:null,open:null,gen:null,io:null,upd:null};
+var REPO='kimchaily/kana-dojo',CRT=[['idee','Idee','💡','enhancement'],['fehler','Fehler','🐞','bug'],['inhalt','Inhalt','📚','content']];
+var ui={cr:{type:'idee',title:'',body:''},tab:'home',script:S.set.kscript||'h',sel:null,stage:null,open:null,gen:null,io:null,upd:null};
 var X={sample:null,tts:null,voice:null,android:window.AndroidBridge||null,andTts:'wait'};
 
 function $(id){return document.getElementById(id)}
@@ -776,11 +779,29 @@ function pickNote(){var seen=function(n){return S.cult.indexOf(n.id)>=0},act=CUL
  if(!pool.length){S.cult=[];pool=act.length?act:CULT}
  var n=pool[0];S.cult.push(n.id);save();return n}
 
+function crType(t){return CRT.filter(function(x){return x[0]===t})[0]||CRT[0]}
+function crWhere(){return X.android?'Android-App':/github\.io$/.test(location.hostname)?'Web-App':'Claude-Artefakt'}
+function crBody(c){return(c.body?c.body+'\n\n':'')+'---\nIn der App erfasst am '+new Date(c.at).toISOString().slice(0,10)+' · '+c.where}
+function crUrl(c){var t=crType(c.t);return'https://github.com/'+REPO+'/issues/new?title='+encodeURIComponent(c.title)+'&body='+encodeURIComponent(crBody(c))+'&labels='+encodeURIComponent(t[3]+',aus-app')}
+function crText(list){return list.map(function(c){var t=crType(c.t);return'## '+t[2]+' '+t[1]+': '+c.title+'\n'+crBody(c)}).join('\n\n')}
+function vCr(){var d=ui.cr,open=S.crs.filter(function(c){return!c.sent}),sent=S.crs.filter(function(c){return c.sent});
+ var item=function(c){var t=crType(c.t);return'<div class="cr'+(c.sent?' sent':'')+'"><div class="grow"><b>'+t[2]+' '+esc(c.title)+'</b>'+(c.body?'<p class="small muted" style="white-space:pre-wrap">'+esc(c.body)+'</p>':'')+
+  '<span class="small muted">'+esc(t[1])+' · '+new Date(c.at).toLocaleDateString('de-CH')+(c.sent?' · im Backlog':' · noch nicht im Backlog')+'</span></div>'+
+  '<div class="row">'+(c.sent?'<button class="btn" data-a="crunsend" data-i="'+esc(c.id)+'">Doch nicht gesendet</button>':'<a class="btn pri" data-a="crsend" data-i="'+esc(c.id)+'" href="'+esc(crUrl(c))+'" target="_blank" rel="noopener">In den Backlog (GitHub)</a>')+
+  '<button class="btn ghost" data-a="crdel" data-i="'+esc(c.id)+'">'+(ui.confirm===c.id?'Wirklich löschen?':'Löschen')+'</button></div></div>'};
+ return'<section class="card stack-s" id="cr"><h2>Wunsch oder Fehler melden</h2><p class="muted small">Notiere, was dir beim Lernen auffällt. Der Eintrag bleibt auf dem Gerät, bis du ihn in den Backlog schickst. Das geht auch später, wenn du wieder online bist.</p>'+
+  '<div class="seg">'+CRT.map(function(t){return'<button data-a="crtype" data-v="'+t[0]+'" aria-pressed="'+(d.type===t[0])+'">'+t[2]+' '+t[1]+'</button>'}).join('')+'</div>'+
+  '<label class="f">Kurz gesagt<input type="text" id="cr-t" maxlength="120" autocomplete="off" placeholder="z. B. Quiz: falsche Antwort länger anzeigen" value="'+esc(d.title)+'"></label>'+
+  '<label class="f"><span>Details <span class="muted" style="font-weight:500">optional</span></span><textarea id="cr-b" maxlength="4000" style="font:inherit;min-height:84px" placeholder="Wo ist es dir aufgefallen, was wünschst du dir?">'+esc(d.body)+'</textarea></label>'+
+  '<button class="btn pri" data-a="cradd">Notieren</button>'+
+  (open.length?'<h3>Noch nicht im Backlog ('+open.length+')</h3>'+open.map(item).join('')+(open.length>1?'<p class="muted small">GitHub nimmt einen Eintrag pro Formular an. Tippe die Einträge einzeln an oder kopiere alle für den Claude-Chat.</p>':''):'')+
+  (sent.length?'<details><summary class="small" style="cursor:pointer;font-weight:700">Bereits gesendet ('+sent.length+')</summary><div class="stack-s" style="margin-top:8px">'+sent.map(item).join('')+'<button class="btn" data-a="crclear">Gesendete aus der Liste entfernen</button></div></details>':'')+
+  '<div class="row">'+(open.length?'<button class="btn" data-a="crcopy">Offene als Text kopieren</button>':'')+'<a class="btn" href="https://github.com/'+REPO+'/issues" target="_blank" rel="noopener">Backlog ansehen</a></div></section>'}
 function vMore(){
  var skins=[['ai','藍 Indigo',265,1],['matcha','抹茶 Matcha',148,1],['sakura','桜 Sakura',355,1],['kaki','柿 Kaki',62,1],['sumi','墨 Tusche',265,0]];
  var io=ui.io||{},u=ui.upd||{};
  var tts=X.android?(X.andTts==='ok'?'Android-Sprachausgabe (Japanisch)':X.andTts==='nolang'?'Japanische Stimme fehlt auf dem Gerät':'Sprachausgabe startet …'):X.voice?'Browser-Stimme: '+X.voice.name:X.webLang?'Browser-Sprachausgabe (Japanisch)':X.tts?'Claude-Stimme (liest Kana, Akzent kann abweichen)':'Keine Sprachausgabe verfügbar, die Lesehilfe «≈» bleibt';
- return'<div class="stack"><h1>Mehr</h1>'+
+ return'<div class="stack"><h1>Mehr</h1>'+vCr()+
  '<section class="card stack-s"><h2>Aussprache in zwei Minuten</h2><p class="muted small">Die Zeile «≈» unter jedem Eintrag ist eine deutsche Lese-Annäherung: «ss» ist ein scharfes s, einfaches «s» ein weiches wie in Sonne, «’» eine kurze Pause.</p><div class="guide">'+
   '<div><b>Vokale</b> kurz und klar: a, i, u, e, o wie in Katze, Mitte, Kuss, Bett, Motte. Das u ohne runde Lippen.</div>'+
   '<div><b>Strich = lang.</b> ā ī ū ē ō doppelt so lang halten. Die Länge ändert die Bedeutung: obasan ist die Tante, obāsan die Grossmutter.</div>'+
@@ -949,10 +970,18 @@ var ACT={
  dorestore:function(){try{var s=JSON.parse($('bk').value);if(!s||s.v!==1||!s.cards)throw 0;localStorage.setItem(KEY,JSON.stringify(s));S=load();ui.io=null;applyTheme();go();toast('Sicherung eingespielt')}catch(e){toast('Das ist keine gültige Sicherung')}},
  check:function(){ui.upd=Object.assign(ui.upd||{},{checking:true,msg:''});render();try{X.android.checkUpdate()}catch(e){ui.upd.checking=false;render()}},
  install:function(){ui.upd.busy=true;ui.upd.pct=0;ui.upd.msg='';render();try{X.android.installUpdate(ui.upd.url)}catch(e){ui.upd.busy=false;render()}},
+ crtype:function(d){ui.cr.type=d.v;render()},
+ cradd:function(){var t=ui.cr.title.trim(),b=ui.cr.body.trim();if(!t){toast('Bitte kurz beschreiben, worum es geht');return}
+  S.crs.unshift({id:uid(),t:ui.cr.type,title:t.slice(0,120),body:b.slice(0,4000),at:Date.now(),where:crWhere(),sent:false});save();ui.cr.title='';ui.cr.body='';render();toast('Notiert. Jetzt oder später in den Backlog schicken.')},
+ crsend:function(d){setTimeout(function(){S.crs.forEach(function(c){if(c.id===d.i)c.sent=true});save();render()},400)},
+ crunsend:function(d){S.crs.forEach(function(c){if(c.id===d.i)c.sent=false});save();render()},
+ crdel:function(d){if(ui.confirm!==d.i){ui.confirm=d.i;render();return}S.crs=S.crs.filter(function(c){return c.id!==d.i});ui.confirm=null;save();render()},
+ crclear:function(){S.crs=S.crs.filter(function(c){return!c.sent});save();render()},
+ crcopy:function(){copy(crText(S.crs.filter(function(c){return!c.sent})),'Kopiert. Im Claude-Chat einfügen.')},
  ttsdata:function(){try{X.android.installTtsData()}catch(e){}}
 };
-document.addEventListener('click',function(e){var t=e.target.closest('[data-a]');if(!t)return;var f=ACT[t.dataset.a];if(f){if(t.tagName!=='SUMMARY')e.preventDefault();f(t.dataset,t)}});
-document.addEventListener('input',function(e){if(e.target.id==='w-r'){var k=$('w-k');if(k&&!k.dataset.touched)k.value=toHira(e.target.value)}if(e.target.id==='w-k')e.target.dataset.touched=e.target.value?'1':''});
+document.addEventListener('click',function(e){var t=e.target.closest('[data-a]');if(!t)return;var f=ACT[t.dataset.a];if(f){if(t.tagName!=='SUMMARY'&&t.tagName!=='A')e.preventDefault();f(t.dataset,t)}});
+document.addEventListener('input',function(e){if(e.target.id==='cr-t')ui.cr.title=e.target.value;if(e.target.id==='cr-b')ui.cr.body=e.target.value;if(e.target.id==='w-r'){var k=$('w-k');if(k&&!k.dataset.touched)k.value=toHira(e.target.value)}if(e.target.id==='w-k')e.target.dataset.touched=e.target.value?'1':''});
 document.addEventListener('toggle',function(e){if(e.target.id==='rules')ui.rulesOpen=e.target.open},true);
 
 /* ---------- Brücke zur Android-Hülle ---------- */
