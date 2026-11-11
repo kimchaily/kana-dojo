@@ -21,6 +21,9 @@ self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
+  // PR-Vorschauen unter preview/ laufen ohne Service Worker: immer direkt aus dem Netz,
+  // und sie dürfen die zwischengespeicherte Produktion nicht überschreiben.
+  if (url.origin === self.location.origin && url.pathname.indexOf('/preview/') >= 0) return;
 
   if (req.mode === 'navigate') {
     e.respondWith(
