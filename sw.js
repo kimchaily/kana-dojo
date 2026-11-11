@@ -1,7 +1,7 @@
 // Kana Dōjō – Service Worker. Die Version wird beim Build eingesetzt.
 // Seite: zuerst Netz (immer die neuste Version), offline aus dem Cache.
 // Schriften und Icons: aus dem Cache, im Hintergrund aufgefrischt.
-const VERSION = 'ac37ec7';
+const VERSION = '39955f5';
 const CACHE = 'kanadojo-' + VERSION;
 const SHELL = ['./', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
