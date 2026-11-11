@@ -1,38 +1,189 @@
-name: Web-App
+name: Web-App – Produktion und PR-Vorschau
 
-# Jeder Push auf main veröffentlicht die Web-App auf GitHub Pages.
-# Installierte Web-Apps holen die neue Version beim nächsten Öffnen mit Netz.
+# Veröffentlicht die Web-App auf GitHub Pages:
+#   • Push auf main            → Produktion unter  /kana-dojo/
+#   • Pull Request (offen)     → Vorschau unter    /kana-dojo/preview/<branch>/
+#   • Pull Request geschlossen → Vorschau wird wieder entfernt
+#   • Übersicht aller Vorschauen unter             /kana-dojo/preview/
+#
+# Alles liegt im Branch gh-pages nebeneinander, damit sich Produktion und
+# Vorschauen nicht überschreiben.
+#
+# Einmalige Einrichtung (Repo-Einstellungen):
+#   Settings → Pages → Source: «Deploy from a branch» → Branch: gh-pages, Ordner: / (root)
+
 on:
   push:
     branches: [main]
+  pull_request:
+    types: [opened, reopened, synchronize, closed]
   workflow_dispatch:
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
+# Nacheinander ausführen, damit parallele Läufe gh-pages nicht gegenseitig überschreiben.
 concurrency:
-  group: pages
-  cancel-in-progress: true
+  group: pages-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      # Bei einem geschlossenen PR gibt es nichts mehr zu bauen: main auschecken.
       - uses: actions/checkout@v4
-
-      - name: Web-App bauen
-        run: bash tools/build-pages.sh "${GITHUB_SHA::7}"
-
-      - uses: actions/configure-pages@v5
-
-      - uses: actions/upload-pages-artifact@v3
         with:
-          path: site
+          ref: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.repository.default_branch || '' }}
 
-      - id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Ziel bestimmen
+        id: target
+        env:
+          EVENT: ${{ github.event_name }}
+          ACTION: ${{ github.event.action }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT" = "pull_request" ]; then
+            # Branch-Name in einen URL-tauglichen Slug umwandeln.
+            slug=$(printf '%s' "$HEAD_REF" | tr '[:upper:]' '[:lower:]' \
+              | sed -e 's#[^a-z0-9]#-#g' -e 's#-\+#-#g' -e 's#^-##' -e 's#-$##')
+            [ -n "$slug" ] || slug="pr"
+            echo "slug=$slug" >> "$GITHUB_OUTPUT"
+            echo "dir=preview/$slug" >> "$GITHUB_OUTPUT"
+            if [ "$ACTION" = "closed" ]; then echo "mode=remove" >> "$GITHUB_OUTPUT"; else echo "mode=preview" >> "$GITHUB_OUTPUT"; fi
+          else
+            echo "mode=production" >> "$GITHUB_OUTPUT"
+            echo "dir=." >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Auf gh-pages veröffentlichen
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MODE: ${{ steps.target.outputs.mode }}
+          DIR: ${{ steps.target.outputs.dir }}
+          SLUG: ${{ steps.target.outputs.slug }}
+          BRANCH: ${{ github.head_ref }}
+          PR: ${{ github.event.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          SHA="${HEAD_SHA::7}"
+          TOOLS="$GITHUB_WORKSPACE/tools"
+
+          git config --global user.name  "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          REMOTE="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          tmp="$(mktemp -d)"
+
+          # gh-pages klonen; falls der Branch noch nicht existiert, leer anlegen.
+          if git clone --quiet --branch gh-pages --single-branch "$REMOTE" "$tmp" 2>/dev/null; then
+            cd "$tmp"
+          else
+            git clone --quiet "$REMOTE" "$tmp"
+            cd "$tmp"
+            git checkout --quiet --orphan gh-pages
+            git rm -rf --quiet . 2>/dev/null || true
+          fi
+
+          # Produktion im Root ersetzen, den preview/-Baum dabei erhalten.
+          put_root() {
+            find . -maxdepth 1 -mindepth 1 \
+              ! -name '.git' ! -name 'preview' ! -name '.nojekyll' -exec rm -rf {} +
+            cp -R "$1"/. .
+          }
+
+          # Produktion aus dem echten main-Stand bauen (nicht aus dem PR). Nötig,
+          # solange gh-pages noch keine Produktion enthält.
+          root_from_main() {
+            local wt; wt="$(mktemp -d)"
+            git -C "$GITHUB_WORKSPACE" fetch --quiet --depth=1 origin main || return 1
+            git -C "$GITHUB_WORKSPACE" worktree add --quiet --detach "$wt" FETCH_HEAD || return 1
+            (cd "$wt" && env -u PREVIEW_SLUG bash tools/build-pages.sh "$(git rev-parse --short HEAD)") || return 1
+            put_root "$wt/site"
+          }
+
+          case "$MODE" in
+            production)
+              bash "$TOOLS/build-pages.sh" "$SHA"
+              put_root "$GITHUB_WORKSPACE/site"
+              ;;
+            preview)
+              PREVIEW_SLUG="$SLUG" bash "$TOOLS/build-pages.sh" "$SHA"
+              rm -rf "$DIR" && mkdir -p "$DIR"
+              cp -R "$GITHUB_WORKSPACE/site"/. "$DIR"/
+              python3 "$TOOLS/pages-portal.py" meta --dir "$DIR" --slug "$SLUG" \
+                --branch "$BRANCH" --pr "$PR" --sha "$SHA"
+              ;;
+            remove)
+              rm -rf "$DIR"
+              ;;
+          esac
+
+          if [ ! -f index.html ]; then
+            root_from_main || echo "::warning::Produktion konnte nicht aus main gebaut werden."
+          fi
+
+          # Selbstheilung: Vorschauen ohne offenen PR entfernen, auch wenn ein
+          # closed-Event verpasst wurde.
+          slugify() {
+            printf '%s' "$1" | tr '[:upper:]' '[:lower:]' \
+              | sed -e 's#[^a-z0-9]#-#g' -e 's#-\+#-#g' -e 's#^-##' -e 's#-$##'
+          }
+          prune_stale_previews() {
+            [ -d preview ] || return 0
+            local open_refs
+            # Bei einem Fehler (z. B. Rate-Limit) nichts auf gut Glück löschen.
+            if ! open_refs=$(gh pr list --repo "$GITHUB_REPOSITORY" --state open \
+                              --limit 200 --json headRefName --jq '.[].headRefName'); then
+              echo "Offene PRs nicht abrufbar, Aufräumen übersprungen."
+              return 0
+            fi
+            local keep=" " ref d s
+            while IFS= read -r ref; do
+              [ -n "$ref" ] && keep="$keep$(slugify "$ref") "
+            done <<< "$open_refs"
+            # Der gerade gebaute PR bleibt in jedem Fall.
+            [ "$MODE" = "preview" ] && keep="$keep$SLUG "
+            for d in preview/*/; do
+              [ -d "$d" ] || continue
+              s=$(basename "$d")
+              case "$keep" in
+                *" $s "*) : ;;
+                *) echo "Entferne verwaiste Vorschau: $s"; rm -rf "$d" ;;
+              esac
+            done
+          }
+          prune_stale_previews
+
+          python3 "$TOOLS/pages-portal.py" portal --repo "$GITHUB_REPOSITORY" --root .
+
+          # GitHub Pages soll die Dateien nicht durch Jekyll filtern.
+          touch .nojekyll
+
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Keine Änderungen zu veröffentlichen."
+            exit 0
+          fi
+          git commit --quiet -m "Deploy ${MODE}: ${DIR} (${SHA})"
+          git push --quiet origin gh-pages
+
+      - name: Vorschau-Link am PR kommentieren
+        if: >
+          steps.target.outputs.mode == 'preview' &&
+          (github.event.action == 'opened' || github.event.action == 'reopened')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SLUG: ${{ steps.target.outputs.slug }}
+          PR: ${{ github.event.number }}
+        run: |
+          set -euo pipefail
+          base="https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}"
+          gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --body "🔍 **Vorschau:** ${base}/preview/${SLUG}/
+
+          Alle Vorschauen: ${base}/preview/
+
+          Aktualisiert sich bei jedem Push auf diesen Branch (nach etwa einer Minute). Die Vorschau arbeitet mit einer Kopie des Lernstands, der echte Stand bleibt unverändert."

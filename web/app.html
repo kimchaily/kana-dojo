@@ -585,6 +585,8 @@ P('schilder','🏮','Schilder lesen','Katakana und Hiragana im Stadtbild',[
 var KEY='kanadojo.v1',DAY=864e5,INT=[0,1,3,7,16,35];
 function def(){return{v:1,kana:{},learned:{h:[],k:[]},cards:{},packs:[],active:['basis','rest','veg'],cult:[],
  set:{mode:'auto',skin:'ai',kana:'reveal',rate:0.85,auto:true,dir:'de',kscript:'h'},streak:{last:'',n:0},upd:0}}
+/* Vorschau (PR-Deploy): eigener Speicher pro Branch, beim ersten Öffnen mit einer Kopie des echten Lernstands gefüllt. */
+if(window.__KD_PREVIEW){(function(){var pk=KEY+'@'+window.__KD_PREVIEW;try{var cur=localStorage.getItem(KEY);if(localStorage.getItem(pk)==null&&cur!=null)localStorage.setItem(pk,cur)}catch(e){}KEY=pk})()}
 function load(){var d=def();try{var s=JSON.parse(localStorage.getItem(KEY)||'null');if(s&&typeof s==='object'){
   Object.keys(d).forEach(function(k){if(s[k]!=null)d[k]=(k==='set'||k==='learned')?Object.assign(d[k],s[k]):s[k]})}}catch(e){}return d}
 var S=load();
