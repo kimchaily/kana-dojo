@@ -158,6 +158,25 @@ details.card[open]>summary{margin-bottom:12px}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(88px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:700;z-index:40;max-width:calc(100% - 32px);text-align:center}
 .banner{background:var(--accent-soft);border-radius:var(--r);padding:12px 14px}
 
+.kk{color:var(--accent)}
+.sq.kk{color:var(--accent)}
+.sq.pr{font-size:clamp(15px,4.7vw,22px)}
+.sq.pr i{font-style:normal;margin-left:.16em;color:var(--accent)}
+.sq.pr.g2{border-bottom:3px solid var(--good)}
+.sq.pr.g0{border-bottom:3px solid var(--shu)}
+.sq.big.pb{width:min(150px,38vw);font-size:min(88px,22vw)}
+.lg{display:inline-block;width:16px;height:6px;border-radius:3px;background:var(--line);margin-right:4px}
+.lg.g2{background:var(--good)} .lg.g0{background:var(--shu)}
+.pill.g2{background:none;border:1.5px solid var(--good);color:var(--good)}
+.pill.g0{background:var(--sunk);color:var(--muted)}
+.mrow{display:grid;grid-template-columns:26px minmax(0,1fr);gap:8px;font-size:13.5px;align-items:start}
+.mrow .jp{font-size:20px;line-height:1.15}
+.ori{font-size:18px;color:var(--ink)}
+.ex{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
+.exb{text-align:left;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;min-width:0}
+.exb .jp{font-size:17px;overflow-wrap:anywhere}
+.exb b{color:var(--accent)}
+.note{border:1px dashed var(--line);border-radius:var(--r);padding:14px;background:var(--surface);text-align:left;display:flex;flex-direction:column;gap:8px}
 @media (max-width:719px){
   .detail.sheet{position:fixed;left:8px;right:8px;bottom:calc(70px + env(safe-area-inset-bottom,0px));z-index:15;box-shadow:var(--shadow);max-height:62vh;overflow:auto}
   .detail.sheet.none{display:none}
@@ -173,6 +192,7 @@ details.card[open]>summary{margin-bottom:12px}
   .detail.sheet{position:sticky;top:20px}
   .detail .x{display:none}
   .sq{font-size:30px}
+  .sq.pr{font-size:22px}
   .toast{bottom:28px}
 }
 @media (prefers-reduced-motion:no-preference){.flash,.detail{transition:border-color .15s}}
@@ -288,6 +308,83 @@ var MK={
 'ン':'Ein Tropfen und ein Bogen von unten nach oben: wie シ mit nur einem Tropfen. Das *n* am Wortende.'
 };
 var CONF=['さきち','ぬめ','ねれわ','るろ','はほ','あお','いり','こに','たな','シツ','ソン','クタケ','ウワフ','コユヨ','スヌ','チテ','ナメ','マム'];
+
+/* Herkunftszeichen in der Reihenfolge der Tabelle (あ … ん) */
+var ORIH='安以宇衣於加幾久計己左之寸世曽太知川天止奈仁奴祢乃波比不部保末美武女毛也由与良利留礼呂和遠无',
+    ORIK='阿伊宇江於加幾久介己散之須世曽多千川天止奈二奴祢乃八比不部保末三牟女毛也由与良利流礼呂和乎尓';
+var GR=['Verschieden','Verwandt','Zwilling'];
+/* Brücken Hiragana ↔ Katakana: [Ähnlichkeit 0–2, Text] */
+var BR={
+'あ':[0,'Keine Ähnlichkeit, also eine Szene: Die Axt (ア) hackt nach dem Aal (あ).'],
+'い':[1,'Beide haben zwei Striche. Bei い stehen sie nebeneinander, bei イ lehnt der eine am anderen.'],
+'う':[2,'Fast gleich: ウ ist う mit Ecken. Der Tropfen oben bleibt.'],
+'え':[0,'Nur der Strich oben ist gleich. Szene: Die Ente (え) sitzt auf dem Eisenträger (エ).'],
+'お':[1,'Beide haben ein Kreuz. お endet in Schlaufe und Punkt, オ in einem einzigen Schrägstrich.'],
+'か':[2,'Dasselbe Zeichen: カ ist か ohne den Tropfen rechts.'],
+'き':[2,'Dasselbe Zeichen: キ ist き ohne den Bogen unten.'],
+'く':[1,'く ist ein offener Schnabel. ク ist derselbe Winkel mit einem Deckel obendrauf.'],
+'け':[0,'Wenig Ähnlichkeit. Szene: An der Kellertür (け) lehnt ein schiefes K (ケ).'],
+'こ':[1,'こ sind zwei Striche übereinander. コ verbindet sie rechts zu einer Ecke.'],
+'さ':[1,'Beide haben einen Querstrich, der gekreuzt wird: bei さ einmal mit Bogen, bei サ zweimal gerade.'],
+'し':[1,'Der Haken von し steckt als Bogen in シ. Dazu kommen zwei Tropfen.'],
+'す':[0,'す hat eine Schlaufe, ス keine. Szene: Die Nudel (す) rutscht die Rutschbahn (ス) hinunter.'],
+'せ':[2,'Fast gleich: セ ist せ ohne den kurzen Strich in der Mitte.'],
+'そ':[1,'ソ ist der Zacken ganz oben in そ. Den Rest lässt Katakana weg.'],
+'た':[0,'Keine Ähnlichkeit. Szene: Auf dem «t» und «a» (た) liegt eine Tafel Schokolade (タ).'],
+'ち':[1,'Beide: oben ein Querstrich, dann ein Strich nach unten. ち rollt sich zur 5 ein, チ bleibt gerade.'],
+'つ':[1,'Der Bogen von つ steckt in ツ. Die Welle spritzt, darum zwei Tropfen davor.'],
+'て':[1,'Beide beginnen mit einem Querstrich und enden im Bogen. テ hat einen Strich mehr.'],
+'と':[1,'Beide: ein Stamm mit einem kurzen Strich. Bei と liegt der Stamm gebogen, bei ト steht er gerade.'],
+'な':[1,'ナ ist das Kreuz links oben in な. Schlaufe und Punkt fallen weg.'],
+'に':[1,'ニ sind die zwei Striche rechts in に, ohne den Pfosten links.'],
+'ぬ':[1,'Von den verschlungenen Nudeln (ぬ) bleibt in ヌ nur das Gerüst: ein Bogen und ein Kreuzstrich.'],
+'ね':[0,'Keine Ähnlichkeit. Szene: Die Katze (ね) schaut zum Nest (ネ) hinauf.'],
+'の':[1,'ノ ist der erste Strich von の: der Schrägstrich, ohne den Kreis.'],
+'は':[0,'Keine Ähnlichkeit. Beide lachen «ha-ha»: は mit H und a, ハ als offener Mund.'],
+'ひ':[1,'Beide sind eine offene Schale: ひ öffnet sich nach oben, ヒ nach rechts.'],
+'ふ':[1,'フ ist der Umriss von ふ: der Hang des Fuji ohne Wolken.'],
+'へ':[2,'Praktisch gleich. In beiden Schriften derselbe Heuhaufen.'],
+'ほ':[1,'ホ ist das Kreuz aus der rechten Hälfte von ほ, mit zwei Strahlen statt der Schlaufe.'],
+'ま':[0,'Keine Ähnlichkeit. Szene: Mama (マ) ruft vom Mast (ま) herunter.'],
+'み':[0,'Keine Ähnlichkeit. ミ sind drei Striche, und «mittsu» heisst drei. み merkst du dir als 21.'],
+'む':[1,'Beide enden mit einem Winkel und einem kurzen Strich. ム ist む ohne Schlaufe.'],
+'め':[1,'メ ist das Kreuz in der Mitte von め, ohne den Bogen rundherum.'],
+'も':[2,'Fast gleich: モ ist も mit geraden Strichen, ohne Haken unten.'],
+'や':[2,'Fast gleich: ヤ ist や ohne den kleinen Tropfen.'],
+'ゆ':[0,'Kaum ähnlich. Beide fahren eine Kehre («you-turn»): ゆ rund, ユ eckig.'],
+'よ':[1,'Bei よ zeigt ein Strich nach rechts, bei ヨ zeigen drei nach links: Das Yo-Yo (よ) liegt im Regal (ヨ).'],
+'ら':[1,'Beide: oben ein kurzer Strich, darunter ein Bogen nach links. ラ ist die eckige Fassung.'],
+'り':[2,'Fast gleich: zwei Striche, der rechte länger. リ ist nur gerader.'],
+'る':[0,'Kaum ähnlich. る rollt sich ein, ル spreizt zwei Wurzeln.'],
+'れ':[1,'レ ist der letzte Strich von れ: hinunter und nach rechts oben weg.'],
+'ろ':[0,'Kaum ähnlich. Szene: Die kurvige Strasse (ろ) endet am Roboterkopf (ロ).'],
+'わ':[1,'ワ ist der grosse Bogen rechts in わ, eckig gezogen.'],
+'を':[0,'Beide schreiben nur die Partikel «o». ヲ siehst du im Alltag fast nie.'],
+'ん':[0,'Kaum ähnlich. Beide enden mit einem Schwung nach rechts oben.']
+};
+/* 豆知識: Alltagshinweise, je einem Paket zugeordnet. y = Art der Aussage */
+var CULT=[
+{id:'c1',p:'rest',y:'Üblich',t:'Das Personal kommt nicht von selbst',x:'In vielen Lokalen wartet das Personal, bis du rufst. «Sumimasen!» ist dafür normal und nicht unhöflich. Oft gibt es auch einen Rufknopf am Tisch.',w:['すみません','sumimasen','Entschuldigung']},
+{id:'c4',p:'veg',y:'Tatsache',t:'Dashi sieht man nicht',x:'Fischbrühe steckt in Misosuppe, in Udon- und Soba-Brühe, in vielen Saucen und Eierspeisen. «Vegetarisch» wird oft als «ohne sichtbares Fleisch» verstanden. Der Satz mit Dashi ist deshalb der wichtigste im Paket.',w:['だし','dashi','Brühe']},
+{id:'c13',p:'basis',y:'Osaka',t:'Osaka spricht Kansai-ben',x:'Du hörst «ōkini» für danke, «maido» als Gruss im Laden und «honma?» für «wirklich?». Standardjapanisch versteht jede und jeder. Den Dialekt musst du nicht sprechen, nur erkennen.',w:['ほんま','honma','wirklich']},
+{id:'c6',p:'shop',y:'Üblich',t:'Geld kommt aufs Tablett',x:'An der Kasse liegt ein kleines Tablett. Leg Geld oder Karte dorthin statt in die Hand. Das Wechselgeld kommt oft auf demselben Weg zurück.',w:['おつり','otsuri','Wechselgeld']},
+{id:'c5',p:'veg',y:'Regel',t:'Walnuss steht auf der Packung',x:'Auf verpackten Lebensmitteln muss Walnuss als Allergen angegeben sein. Such auf der Zutatenliste nach くるみ. In Restaurants und bei offen verkauften Speisen kannst du dich nicht darauf verlassen, dort hilft nur fragen.',w:['くるみ','kurumi','Walnuss']},
+{id:'c8',p:'weg',y:'Osaka',t:'ICOCA: die Karte, die «Gehen wir?» heisst',x:'Die Bahnkarte von JR West heisst ICOCA. Der Name spielt mit «iko ka», Kansai-Dialekt für «Gehen wir?». Sie gilt in Bahn, Bus und vielen Läden.',w:['イコカ','ikoka','ICOCA-Karte']},
+{id:'c2',p:'rest',y:'Üblich',t:'Kein Trinkgeld, bezahlt wird an der Kasse',x:'Trinkgeld ist nicht üblich und wird oft zurückgegeben. Meist nimmst du den Zettel vom Tisch und zahlst an der Kasse beim Ausgang.',w:['おかいけい','okaikei','Rechnung']},
+{id:'c14',p:'basis',y:'Üblich',t:'«Hai» heisst nicht immer Ja',x:'«Hai» zeigt oft nur, dass jemand zuhört. Ein klares Nein hörst du selten. «Chotto …» mit Zögern bedeutet meist, dass etwas nicht geht.',w:['ちょっと','chotto','ein bisschen / eher nicht']},
+{id:'c3',p:'veg',y:'Üblich',t:'Otōshi: die Vorspeise, die niemand bestellt hat',x:'In Izakaya kommt oft ungefragt ein kleines Gericht, das als Gedeck verrechnet wird. In Kansai heisst es auch Tsukidashi. Es enthält häufig Fisch oder Fleisch, frag also nach.',w:['おとおし','otōshi','Gedeck-Vorspeise']},
+{id:'c9',p:'weg',y:'Osaka',t:'Rolltreppe: in Osaka rechts',x:'In Osaka steht man aus Gewohnheit rechts, in Tokio links. Die Betreiber bitten inzwischen darum, auf beiden Seiten stehen zu bleiben. Schau, was die Leute vor dir tun.',w:['エスカレーター','esukarētā','Rolltreppe']},
+{id:'c15',p:'zahl',y:'Üblich',t:'Vier und neun haben zwei Namen',x:'«Shi» (4) klingt wie «Tod», «ku» (9) wie «Leid». Darum sagt man meist «yon» und «kyū». Die Vier als Unglückszahl kennst du vielleicht aus dem Chinesischen.',w:['よん','yon','vier']},
+{id:'c16',p:'rest',y:'Erwartung',t:'Stäbchen nie in den Reis stecken',x:'Aufrecht steckende Stäbchen erinnern an ein Totenritual, ebenso das Weiterreichen von Essen von Stäbchen zu Stäbchen. Leg sie auf die Ablage oder quer über die Schale.',w:['おはし','ohashi','Stäbchen']},
+{id:'c7',p:'shop',y:'Regel',t:'Die Tüte kostet',x:'Plastiktüten sind seit 2020 kostenpflichtig. An der Kasse wirst du gefragt, ob du eine brauchst: «Fukuro wa irimasu ka?»',w:['ふくろ','fukuro','Tüte']},
+{id:'c11',p:'leute',y:'Erwartung',t:'Verbeugen statt Händeschütteln',x:'Zur Begrüssung genügt eine leichte Verbeugung. Die Hand gibt man meist nur, wenn das Gegenüber sie anbietet. Mit «Yoroshiku onegaishimasu» schliesst du jede Vorstellung ab.',w:['よろしく','yoroshiku','auf gutes Miteinander']},
+{id:'c10',p:'weg',y:'Erwartung',t:'Im Zug ist es still',x:'Telefonieren im Zug gilt als störend. Das Handy läuft im «Manner Mode», also lautlos. Bei den Vorzugssitzen wird das besonders ernst genommen.',w:['マナーモード','manā mōdo','Lautlos-Modus']},
+{id:'c17',p:'schilder',y:'Üblich',t:'Ein Vorhang heisst: geöffnet',x:'Hängt der Stoffvorhang (Noren) vor der Tür, ist das Lokal offen. Auf Badehäusern steht darauf oft nur ein Zeichen: ゆ für heisses Wasser.',w:['ゆ','yu','heisses Wasser, Bad']},
+{id:'c12',p:'leute',y:'Üblich',t:'Erst Kanpai, dann trinken',x:'Man wartet, bis alle ein Glas haben, und stösst gemeinsam an. In der Runde schenkt man einander ein, nicht sich selbst.',w:['かんぱい','kanpai','Prost']},
+{id:'c18',p:'schilder',y:'Tatsache',t:'Katakana verrät Lehnwörter',x:'Was in Katakana steht, kommt meist aus dem Englischen. Lies es laut und langsam: «kōhī» ist coffee, «teikuauto» take-out, «resutoran» restaurant.',w:['コーヒー','kōhī','Kaffee']},
+{id:'c19',p:'leute',y:'Erwartung',t:'Schuhe aus am Genkan',x:'In Wohnungen, vielen traditionellen Lokalen und manchen Umkleidekabinen zieht man die Schuhe aus. Die Stufe im Eingang zeigt, wo. Hausschuhe stehen oft bereit.',w:['げんかん','genkan','Eingangsbereich']},
+{id:'c20',p:'not',y:'Tatsache',t:'Das Handy warnt vor Erdbeben',x:'Bei starken Beben schlagen alle Handys gleichzeitig Alarm, oft Sekunden vor den Erschütterungen. Weg von Fenstern, unter einen Tisch, danach den Durchsagen folgen.',w:['じしん','jishin','Erdbeben']}
+];
 
 var R2H=(function(){var m={a:'あ',i:'い',u:'う',e:'え',o:'お'};
  var rows={k:'かきくけこ',s:'さしすせそ',t:'たちつてと',n:'なにぬねの',h:'はひふへほ',m:'まみむめも',r:'らりるれろ',g:'がぎぐげご',z:'ざじずぜぞ',d:'だぢづでど',b:'ばびぶべぼ',p:'ぱぴぷぺぽ'};
@@ -454,18 +551,45 @@ P('not','🆘','Notfall und Gesundheit','Hilfe holen, Beschwerden nennen',[
  ['Jishin','じしん','Erdbeben'],
  ['Hinanjo wa doko desu ka?','ひなんじょはどこですか','Wo ist die Notunterkunft?'],
  ['Saifu o nakushimashita','さいふをなくしました','Ich habe mein Portemonnaie verloren']
+]),
+P('schilder','🏮','Schilder lesen','Katakana und Hiragana im Stadtbild',[
+ ['konbini','コンビニ','24-Stunden-Laden'],
+ ['toire','トイレ','Toilette'],
+ ['reji','レジ','Kasse'],
+ ['kafe','カフェ','Café'],
+ ['kōhī','コーヒー','Kaffee'],
+ ['resutoran','レストラン','Restaurant'],
+ ['rāmen','ラーメン','Ramen','Die Brühe ist fast immer mit Fleisch oder Fisch gekocht'],
+ ['pan','パン','Brot'],
+ ['sarada','サラダ','Salat'],
+ ['teikuauto','テイクアウト','zum Mitnehmen'],
+ ['sūpā','スーパー','Supermarkt'],
+ ['hoteru','ホテル','Hotel'],
+ ['takushī','タクシー','Taxi'],
+ ['basu','バス','Bus'],
+ ['erebētā','エレベーター','Lift'],
+ ['esukarētā','エスカレーター','Rolltreppe'],
+ ['koin rokkā','コインロッカー','Schliessfach'],
+ ['doraggu sutoa','ドラッグストア','Drogerie'],
+ ['yu','ゆ','heisses Wasser, Bad','Steht auf dem Vorhang von Badehäusern'],
+ ['kusuri','くすり','Medikamente','Steht gross an Apotheken und Drogerien'],
+ ['udon','うどん','Udon-Nudeln'],
+ ['soba','そば','Buchweizennudeln'],
+ ['onigiri','おにぎり','Reisbällchen','Füllung prüfen, oft Fisch'],
+ ['tabako','たばこ','Tabak'],
+ ['irasshaimase','いらっしゃいませ','Willkommen','Ruft das Personal beim Eintreten. Eine Antwort wird nicht erwartet']
 ])
 ];
 
 /* ---------- Zustand ---------- */
 var KEY='kanadojo.v1',DAY=864e5,INT=[0,1,3,7,16,35];
-function def(){return{v:1,kana:{},learned:{h:[],k:[]},cards:{},packs:[],active:['basis','rest','veg'],
- set:{mode:'auto',skin:'ai',kana:'reveal',rate:0.85,auto:true,dir:'de'},streak:{last:'',n:0},upd:0}}
+function def(){return{v:1,kana:{},learned:{h:[],k:[]},cards:{},packs:[],active:['basis','rest','veg'],cult:[],
+ set:{mode:'auto',skin:'ai',kana:'reveal',rate:0.85,auto:true,dir:'de',kscript:'h'},streak:{last:'',n:0},upd:0}}
 function load(){var d=def();try{var s=JSON.parse(localStorage.getItem(KEY)||'null');if(s&&typeof s==='object'){
   Object.keys(d).forEach(function(k){if(s[k]!=null)d[k]=(k==='set'||k==='learned')?Object.assign(d[k],s[k]):s[k]})}}catch(e){}return d}
 var S=load();
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
-var ui={tab:'home',script:'h',sel:null,stage:null,open:null,gen:null,io:null,upd:null};
+var ui={tab:'home',script:S.set.kscript||'h',sel:null,stage:null,open:null,gen:null,io:null,upd:null};
 var X={sample:null,tts:null,voice:null,android:window.AndroidBridge||null,andTts:'wait'};
 
 function $(id){return document.getElementById(id)}
@@ -482,8 +606,10 @@ function packById(id){return allPacks().filter(function(p){return p.id===id})[0]
 function activeItems(){var a=[];allPacks().forEach(function(p){if(S.active.indexOf(p.id)>=0)a=a.concat(p.items)});return a}
 function dueItems(){var n=Date.now();return activeItems().filter(function(it){var c=S.cards[it.id];return c&&c.d<=n})}
 function newItems(){return activeItems().filter(function(it){return!S.cards[it.id]})}
-function nextLesson(){for(var s=0;s<2;s++){var sc='hk'[s];for(var i=0;i<ROWS.length;i++)if(S.learned[sc].indexOf(ROWS[i][0])<0)return{script:sc,row:ROWS[i]}}return null}
-function scriptName(s){return s==='k'?'Katakana':'Hiragana'}
+function rowDone(r,sc){return sc==='b'?S.learned.h.indexOf(r[0])>=0&&S.learned.k.indexOf(r[0])>=0:S.learned[sc].indexOf(r[0])>=0}
+function nextLesson(){if(S.set.kscript==='b'){for(var j=0;j<ROWS.length;j++)if(!rowDone(ROWS[j],'b'))return{script:'b',row:ROWS[j]};return null}
+ for(var s=0;s<2;s++){var sc='hk'[s];for(var i=0;i<ROWS.length;i++)if(S.learned[sc].indexOf(ROWS[i][0])<0)return{script:sc,row:ROWS[i]}}return null}
+function scriptName(s){return s==='b'?'Hiragana + Katakana':s==='k'?'Katakana':'Hiragana'}
 function uid(){return Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4)}
 
 /* ---------- Ton ---------- */
@@ -540,25 +666,66 @@ function vHome(){
  '<section class="card"><h2>Lernpfad Schrift</h2><ol class="path">'+steps.map(function(s,i){return'<li class="'+(s.done?'done':s.now?'now':'')+'"><span class="n">'+(s.done?'✓':i+1)+'</span><div><h3>'+s.t+'</h3><div class="muted small">'+s.s+'</div></div>'+s.act+'</li>'}).join('')+'</ol>'+
  '<p class="muted small" style="margin-top:8px">Der Wortschatz läuft parallel ab dem ersten Tag, zuerst über Rōmaji und Ton.</p></section></div>'}
 
+function other(c){return isKata(c)?toHiraCh(c):toKata(c)}
+function origin(h){var i=allChars('h').indexOf(h);return[ORIH.charAt(i),ORIK.charAt(i)]}
+function examples(chars,max){var act=[],rest=[];
+ allPacks().forEach(function(p){var on=S.active.indexOf(p.id)>=0;p.items.forEach(function(it){if(chars.some(function(c){return it.k.indexOf(c)>=0}))(on?act:rest).push({it:it,p:p})})});
+ var by=function(a,b){return a.it.k.length-b.it.k.length};return act.sort(by).concat(rest.sort(by)).slice(0,max||2)}
+function hl(k,chars){return esc(k).replace(new RegExp('['+chars.join('')+']','g'),function(c){return'<b>'+c+'</b>'})}
+function kanaBody(ch,both,inLesson){
+ var h=toHiraCh(ch),k=toKata(h),o=origin(h),un='つん'.indexOf(h)>=0?' (nicht gesichert)':'',out='',own=both?[h,k]:[ch];
+ if(both){var b=BR[h];
+  out+='<div class="mnemo"><span class="pill g'+b[0]+'">'+GR[b[0]]+'</span> '+esc(b[1])+'</div>'+
+  '<div class="mrow"><span class="jp">'+h+'</span><span>'+md(MH[h])+'</span></div><div class="mrow"><span class="jp kk">'+k+'</span><span>'+md(MK[k])+'</span></div>'+
+  '<div class="small muted">Herkunft: '+(o[0]===o[1]?'beide aus <span class="jp ori">'+o[0]+'</span>':'<span class="jp">'+h+'</span> aus <span class="jp ori">'+o[0]+'</span>, <span class="jp">'+k+'</span> aus <span class="jp ori">'+o[1]+'</span>')+un+'</div>'}
+ else{var kt=isKata(ch);
+  out+='<div class="mnemo">'+md((kt?MK:MH)[ch])+'</div><div class="small muted">Herkunft: '+(kt?'ein Teil von':'Schreibschrift von')+' <span class="jp ori">'+o[kt?1:0]+'</span>'+un+'</div>'}
+ var cf=[];CONF.forEach(function(g){if(own.some(function(c){return g.indexOf(c)>=0}))g.split('').forEach(function(c){if(own.indexOf(c)<0&&cf.indexOf(c)<0)cf.push(c)})});
+ if(cf.length)out+='<div class="small"><b>Nicht verwechseln mit:</b> <span class="jp" style="font-size:20px">'+cf.join(' ')+'</span></div>';
+ var ex=examples(own,2);
+ if(ex.length)out+='<div class="stack-s"><span class="eyebrow">Kommt vor in</span>'+ex.map(function(e){
+  var inner='<span class="jp">'+hl(e.it.k,own)+'</span><span class="muted small">'+esc(e.it.r)+' · '+esc(e.it.d)+'</span>';
+  return'<div class="ex">'+(inLesson?'<div class="exb">'+inner+'</div>':'<button class="exb" data-a="open" data-p="'+esc(e.p.id)+'" title="Zum Paket «'+esc(e.p.title)+'»">'+inner+'</button>')+spk(e.it.k)+'</div>'}).join('')+'</div>';
+ return out}
+function pairCell(h,on){var k=toKata(h),a=S.kana[h],b=S.kana[k],ok=a&&a.s>=3&&b&&b.s>=3;
+ return'<button class="sq pr g'+BR[h][0]+(on?' on':'')+(ok?' ok':'')+'" data-a="sel" data-c="'+h+'" aria-label="'+h+' '+k+' '+romajiOf(h)+'"><span>'+h+'<i>'+k+'</i></span><small>'+(ok?'✓ ':'')+romajiOf(h)+'</small></button>'}
 function vKana(){
- var sc=ui.script,M=sc==='k'?MK:MH,learned=S.learned[sc];
- var sel=ui.sel&&(isKata(ui.sel)===(sc==='k'))?ui.sel:null;
+ var sc=ui.script,both=sc==='b';
+ var sel=ui.sel?(sc==='k'?toKata(toHiraCh(ui.sel)):toHiraCh(ui.sel)):null;
  var wide=window.matchMedia('(min-width:720px)').matches;if(!sel&&wide)sel=rowChars(ROWS[0],sc)[0];
- var rows=ROWS.map(function(r){var done=learned.indexOf(r[0])>=0;
-  var cells=r[2].split('').map(function(c){if(c==='-')return'<span class="sq blank"></span>';var ch=sc==='k'?toKata(c):c;return sq(ch,{on:ch===sel})}).join('');
+ var started=both?(S.learned.h.length||S.learned.k.length):S.learned[sc].length;
+ var rows=ROWS.map(function(r){var done=rowDone(r,sc);
+  var cells=r[2].split('').map(function(c){if(c==='-')return'<span class="sq blank"></span>';if(both)return pairCell(c,c===sel);var ch=sc==='k'?toKata(c):c;return sq(ch,{on:ch===sel})}).join('');
   return'<div class="krow"><div class="row"><h3 class="grow">'+esc(r[1])+'</h3>'+(done?'<span class="hanko" title="Gelernt">済</span>':'')+'<button class="btn'+(done?' ghost':'')+'" data-a="lesson" data-s="'+sc+'" data-r="'+r[0]+'">'+(done?'Nochmals':'Lernen')+'</button></div><div class="gojuon">'+cells+'</div></div>'}).join('');
  var det='';
- if(sel){var other=sc==='k'?toHiraCh(sel):toKata(sel),cf=CONF.filter(function(g){return g.indexOf(sel)>=0}).join('').replace(new RegExp(sel,'g'),'');
-  det='<div class="stack-s"><div class="row"><div class="sq big" style="width:112px;font-size:68px"><span>'+sel+'</span></div><div class="grow stack-s"><div class="romaji">'+romajiOf(sel)+'</div><div class="laut">'+scriptName(sc)+' · als '+(sc==='k'?'Hiragana':'Katakana')+': <span class="jp">'+other+'</span></div><div class="row">'+spk(toHiraCh(sel))+'<button class="ico x" data-a="unsel" aria-label="Schliessen">✕</button></div></div></div>'+
-  '<div class="mnemo">'+md(M[sel]||'')+'</div>'+
-  (cf?'<div class="small"><b>Verwechslungsgefahr:</b> <span class="jp" style="font-size:20px">'+cf.split('').join(' ')+'</span></div>':'')+'</div>'}
- return'<div class="stack"><header class="row"><h1 class="grow">Kana</h1><div class="seg" role="group" aria-label="Schrift"><button data-a="script" data-s="h" aria-pressed="'+(sc==='h')+'">ひらがな Hiragana</button><button data-a="script" data-s="k" aria-pressed="'+(sc==='k')+'">カタカナ Katakana</button></div></header>'+
- '<p class="muted">'+(sc==='h'?'Hiragana ist die Grundschrift für japanische Wörter und Grammatik.':'Katakana schreibt Fremdwörter, Namen und vieles auf Speisekarten.')+' Tippe ein Zeichen für die Eselsbrücke.</p>'+
+ if(sel){var h=toHiraCh(sel),k=toKata(h);
+  det='<div class="stack-s"><div class="row">'+
+  (both?'<div class="sq big" style="width:88px;font-size:54px"><span>'+h+'</span></div><div class="sq big kk" style="width:88px;font-size:54px"><span>'+k+'</span></div>'
+       :'<div class="sq big" style="width:112px;font-size:68px"><span>'+sel+'</span></div>')+
+  '<div class="grow stack-s"><div class="romaji">'+romajiOf(sel)+'</div>'+
+  (both?'':'<div class="laut">'+scriptName(sc)+' · als '+(sc==='k'?'Hiragana':'Katakana')+': <span class="jp">'+other(sel)+'</span></div>')+
+  '<div class="row">'+spk(h)+'<button class="ico x" data-a="unsel" aria-label="Schliessen">✕</button></div></div></div>'+kanaBody(sel,both)+'</div>'}
+ var tw=0,st0=0;Object.keys(BR).forEach(function(c){if(BR[c][0]===2)tw++;if(BR[c][0]===0)st0++});
+ var intro=both?'Links Hiragana, rechts <span class="kk">Katakana</span>: gleicher Laut, zwei Formen. Tippe ein Paar für die Brücke zwischen beiden.'
+  :(sc==='h'?'Hiragana ist die Grundschrift für japanische Wörter und Grammatik.':'Katakana schreibt Fremdwörter, Namen und vieles auf Speisekarten.')+' Tippe ein Zeichen für die Eselsbrücke.';
+ var coach=both?'<details class="card"><summary>So lernst du beide zusammen</summary><div class="stack-s"><div class="guide">'+
+  '<div><b>Hiragana ist der Anker.</b> Du siehst es viel öfter. Katakana hängst du an denselben Laut, statt es neu zu lernen.</div>'+
+  '<div><b>Leichte Paare zuerst.</b> '+tw+' Paare sind Zwillinge, die hast du fast geschenkt. Die '+st0+' ganz verschiedenen bekommen eine kleine Szene.</div>'+
+  '<div><b>Abrufen statt anschauen.</b> Nach jeder Reihe folgt ein Kurztest mit Paar-Aufgaben. Fünf Minuten täglich wirken stärker als eine Stunde pro Woche.</div>'+
+  '<div><b>Laut und mit dem Finger.</b> Tippe 🔊, sprich nach und fahre beide Formen nach. Ton, Bild und Bewegung zusammen bleiben besser haften.</div></div>'+
+  '</div></details>':'';
+ return'<div class="stack"><header class="row"><h1 class="grow">Kana</h1><div class="seg" role="group" aria-label="Schrift">'+
+ [['h','あ Hiragana'],['k','ア Katakana'],['b','あア Beide']].map(function(o){return'<button data-a="script" data-s="'+o[0]+'" aria-pressed="'+(sc===o[0])+'">'+o[1]+'</button>'}).join('')+'</div></header>'+
+ '<p class="muted">'+intro+'</p>'+(both?'<div class="small muted"><span class="lg g2"></span>Zwilling &nbsp; <span class="lg"></span>Verwandt &nbsp; <span class="lg g0"></span>Verschieden</div>':'')+coach+
  '<div class="cols two"><section class="card">'+rows+'</section>'+
  '<aside class="detail sheet'+(sel?'':' none')+'">'+det+'</aside></div>'+
- '<div class="row"><button class="btn pri" data-a="quiz"'+(learned.length?'':' disabled')+'>Quiz: gelernte Reihen</button><button class="btn" data-a="quiz" data-all="1">Quiz: alle 46</button></div>'+
+ '<div class="row"><button class="btn pri" data-a="quiz"'+(started?'':' disabled')+'>Quiz: gelernte '+(both?'Paare':'Reihen')+'</button><button class="btn" data-a="quiz" data-all="1">Quiz: alle '+(both?92:46)+'</button></div>'+
+ '<details class="card"><summary>Woher die Kana kommen</summary><div class="stack-s">'+
+ '<p>Kana sind vereinfachte chinesische Schriftzeichen. <b>Hiragana</b> entstand aus der Schreibschrift ganzer Zeichen (<span class="jp">安 → あ</span>), <b>Katakana</b> aus einem Bruchstück davon (<span class="jp">阿 → ア</span>). «Kata» <span class="jp">片</span> bedeutet «Teil».</p>'+
+ '<p>Die Zeichen wurden wegen ihres Lauts gewählt, nicht wegen der Bedeutung. Meist steckt eine alte chinesische Lesung dahinter (<span class="jp">加</span> ka, <span class="jp">天</span> te, <span class="jp">奈</span> na), manchmal eine japanische (<span class="jp">三</span> mi, <span class="jp">女</span> me, <span class="jp">千</span> chi).</p>'+
+ '<p>Wenn du ein Zeichen kennst, such die Form darin: <span class="jp">二 → ニ</span>, <span class="jp">八 → ハ</span>, <span class="jp">千 → チ</span>, <span class="jp">三 → ミ</span>, die linke Hälfte von <span class="jp">加 → カ</span>, und <span class="jp">女</span> steckt in <span class="jp">め</span> und <span class="jp">メ</span>. Probier auch aus, wie das Zeichen in Teochew klingt: Bei manchen ist die Verwandtschaft hörbar, bei anderen nicht.</p>'+
+ '<p class="small muted">Das Herkunftszeichen steht bei jedem Kana in der Detailansicht. Bei つ und ん sind sich die Quellen nicht einig.</p></div></details>'+
  vRules(sc)+'</div>'}
-
 function vRules(sc){
  var f=function(s){return sc==='k'?toKata(s):s};
  var rowsD=[['k→g','がぎぐげご'],['s→z','ざじずぜぞ'],['t→d','だぢづでど'],['h→b','ばびぶべぼ'],['h→p','ぱぴぷぺぽ']];
@@ -594,11 +761,20 @@ function vWords(){
 function itemRow(it,p){
  return'<div class="item"><div><div class="r">'+esc(it.r)+'</div><div class="laut">≈ '+esc(laut(it.r))+'</div><div class="k">'+esc(it.k)+'</div><div>'+esc(it.d)+'</div>'+(it.n?'<div class="muted small">'+esc(it.n)+'</div>':'')+'</div>'+
  '<div class="row">'+spk(it.k)+(p.builtin?'':'<button class="ico" data-a="delitem" data-i="'+esc(it.id)+'" aria-label="Löschen">✕</button>')+'</div></div>'}
-function vPack(){var p=packById(ui.open);if(!p){ui.open=null;return vWords()}var act=S.active.indexOf(p.id)>=0;
+function vPack(){var p=packById(ui.open);if(!p){ui.open=null;return vWords()}var act=S.active.indexOf(p.id)>=0,notes=CULT.filter(function(n){return n.p===p.id});
  return'<div class="stage" style="max-width:720px"><div class="row"><button class="btn ghost" data-a="closepack">← Pakete</button></div>'+
  '<header class="row"><span style="font-size:34px">'+esc(p.em||'🗂️')+'</span><div class="grow"><h1>'+esc(p.title)+'</h1><p class="muted">'+esc(p.sub||p.items.length+' Einträge')+'</p></div></header>'+
  '<div class="row"><button class="btn'+(act?'':' pri')+'" data-a="toggle" data-p="'+esc(p.id)+'">'+(act?'Aus der Repetition nehmen':'In die Repetition aufnehmen')+'</button>'+(p.builtin?'':'<button class="btn ghost" data-a="delpack" data-p="'+esc(p.id)+'">'+(ui.confirm===p.id?'Wirklich löschen?':'Paket löschen')+'</button>')+'</div>'+
+ (notes.length?'<details class="card"><summary>豆知識 Gut zu wissen ('+notes.length+')</summary><div class="stack">'+notes.map(function(n){return noteCard(n,false)}).join('')+'</div></details>':'')+
  '<section class="card">'+(p.items.length?p.items.map(function(it){return itemRow(it,p)}).join(''):'<p class="muted">Noch keine Einträge.</p>')+'</section></div>'}
+function noteCard(n,link){var p=packById(n.p);
+ return'<aside class="note"><div class="row"><span class="eyebrow grow">豆知識 · mame-chishiki · gut zu wissen</span><span class="pill g0">'+esc(n.y)+'</span></div><h3>'+esc(n.t)+'</h3><p>'+esc(n.x)+'</p>'+
+ '<div class="row"><span class="jp" style="font-size:20px">'+esc(n.w[0])+'</span><span class="muted small grow">'+esc(n.w[1])+' · '+esc(n.w[2])+'</span>'+spk(n.w[0])+'</div>'+
+ (link&&p?'<button class="btn ghost" data-a="open" data-p="'+esc(p.id)+'">Zum Paket «'+esc(p.title)+'»</button>':'')+'</aside>'}
+function pickNote(){var seen=function(n){return S.cult.indexOf(n.id)>=0},act=CULT.filter(function(n){return S.active.indexOf(n.p)>=0});
+ var pool=act.filter(function(n){return!seen(n)});if(!pool.length)pool=CULT.filter(function(n){return!seen(n)});
+ if(!pool.length){S.cult=[];pool=act.length?act:CULT}
+ var n=pool[0];S.cult.push(n.id);save();return n}
 
 function vMore(){
  var skins=[['ai','藍 Indigo',265,1],['matcha','抹茶 Matcha',148,1],['sakura','桜 Sakura',355,1],['kaki','柿 Kaki',62,1],['sumi','墨 Tusche',265,0]];
@@ -636,37 +812,40 @@ function vMore(){
 /* ---------- Bühne: Lektion, Quiz, Repetition ---------- */
 function vStage(){var st=ui.stage;return st.t==='lesson'?vLesson(st):st.t==='quiz'?vQuiz(st):vReview(st)}
 function stageHead(title,sub,pct){return'<div class="row"><button class="ico" data-a="closestage" aria-label="Schliessen">✕</button><div class="grow"><h3>'+esc(title)+'</h3><div class="muted small">'+esc(sub)+'</div></div></div><div class="meter"><b style="width:'+Math.round(pct*100)+'%"></b></div>'}
-function vLesson(st){var chars=rowChars(st.row,st.script),ch=chars[st.i],M=st.script==='k'?MK:MH;
- var cf=CONF.filter(function(g){return g.indexOf(ch)>=0}).join('').replace(new RegExp(ch,'g'),'');
- return'<div class="stage">'+stageHead(scriptName(st.script)+' · '+st.row[1],'Zeichen '+(st.i+1)+' von '+chars.length,(st.i+1)/chars.length)+
- '<div class="flash"><div class="sq big"><span>'+ch+'</span></div><div class="romaji">'+romajiOf(ch)+'</div>'+spk(toHiraCh(ch))+'</div>'+
- '<div class="mnemo">'+md(M[ch])+'</div>'+
- (cf?'<div class="small"><b>Nicht verwechseln mit:</b> <span class="jp" style="font-size:20px">'+cf.split('').join(' ')+'</span></div>':'')+
- '<p class="muted small">Sprich den Laut dreimal laut und fahre das Zeichen mit dem Finger auf dem Tisch nach.</p>'+
+function vLesson(st){var both=st.script==='b',chars=rowChars(st.row,st.script),ch=chars[st.i],h=toHiraCh(ch),k=toKata(h);
+ return'<div class="stage">'+stageHead(scriptName(st.script)+' · '+st.row[1],(both?'Paar ':'Zeichen ')+(st.i+1)+' von '+chars.length,(st.i+1)/chars.length)+
+ '<div class="flash">'+(both?'<div class="row" style="justify-content:center;flex-wrap:nowrap"><div class="sq big pb"><span>'+h+'</span></div><div class="sq big pb kk"><span>'+k+'</span></div></div>':'<div class="sq big"><span>'+ch+'</span></div>')+
+ '<div class="romaji">'+romajiOf(ch)+'</div>'+spk(h)+'</div>'+
+ kanaBody(ch,both,true)+
+ '<p class="muted small">'+(both?'Sprich den Laut laut und zeig zuerst auf Hiragana, dann auf Katakana. Fahre beide Formen mit dem Finger nach.':'Sprich den Laut dreimal laut und fahre das Zeichen mit dem Finger auf dem Tisch nach.')+'</p>'+
  '<div class="row"><button class="btn" data-a="lprev"'+(st.i?'':' disabled')+'>Zurück</button><button class="btn pri grow" data-a="lnext">'+(st.i<chars.length-1?'Weiter':'Zum Kurztest')+'</button></div></div>'}
 function makeQ(st){var pool=st.pool,w=pool.map(function(c){var k=S.kana[c];return(k?1/(1+k.s):1.5)*(st.focus.indexOf(c)>=0?2.5:1)*(st.q&&st.q.c===c?0.05:1)});
  var sum=w.reduce(function(a,b){return a+b},0),r=Math.random()*sum,c=pool[0];for(var i=0;i<pool.length;i++){r-=w[i];if(r<=0){c=pool[i];break}}
  var univ=allChars(isKata(c)?'k':'h'),cands=CONF.filter(function(g){return g.indexOf(c)>=0}).join('').split('').filter(function(x){return x&&x!==c});
  var rest=univ.filter(function(x){return x!==c&&cands.indexOf(x)<0&&romajiOf(x)!==romajiOf(c)}).sort(function(){return Math.random()-.5});
  var o=cands.concat(rest).slice(0,3).concat([c]).sort(function(){return Math.random()-.5});
- return{c:c,type:Math.random()<.5?'k2r':'r2k',o:o,a:null}}
+ return{c:c,type:st.cross&&st.pool.indexOf(other(c))>=0&&Math.random()<.45?'x':(Math.random()<.5?'k2r':'r2k'),o:o,a:null}}
 function vQuiz(st){
- if(st.n>=st.total){return'<div class="stage">'+stageHead('Kana-Quiz','Fertig',1)+'<div class="flash"><div class="romaji">'+st.ok+' / '+st.total+'</div><p class="muted">'+(st.ok===st.total?'Fehlerfrei.':'Die verpassten Zeichen kommen im nächsten Durchgang öfter.')+'</p>'+
+ if(st.n>=st.total){st.note=st.note||pickNote();
+  return'<div class="stage">'+stageHead('Kana-Quiz','Fertig',1)+'<div class="flash"><div class="romaji">'+st.ok+' / '+st.total+'</div><p class="muted">'+(st.ok===st.total?'Fehlerfrei.':'Die verpassten Zeichen kommen im nächsten Durchgang öfter.')+'</p>'+
   (st.miss.length?'<div class="row" style="justify-content:center">'+st.miss.map(function(c){return'<span class="sq" style="width:52px;font-size:28px"><span>'+c+'</span><small>'+romajiOf(c)+'</small></span>'}).join('')+'</div>':'')+'</div>'+
-  '<div class="row"><button class="btn grow" data-a="closestage">Schliessen</button><button class="btn pri grow" data-a="quizagain">Noch eine Runde</button></div></div>'}
- var q=st.q,k2r=q.type==='k2r',M=isKata(q.c)?MK:MH;
- var opts=q.o.map(function(o){var cls='opt'+(k2r?'':' k');if(q.a!=null){if(o===q.c)cls+=' right';else if(o===q.a)cls+=' wrong'}
-  return'<button class="'+cls+'" data-a="ans" data-c="'+o+'"'+(q.a!=null?' disabled':'')+'>'+(k2r?romajiOf(o):o)+'</button>'}).join('');
+  '<div class="row"><button class="btn grow" data-a="closestage">Schliessen</button><button class="btn pri grow" data-a="quizagain">Noch eine Runde</button></div>'+noteCard(st.note,true)+'</div>'}
+ var q=st.q,t=q.type,h=toHiraCh(q.c),M=isKata(q.c)?MK:MH;
+ var opts=q.o.map(function(o){var cls='opt'+(t==='k2r'?'':' k')+(t==='x'&&isKata(other(o))?' kk':'');if(q.a!=null){if(o===q.c)cls+=' right';else if(o===q.a)cls+=' wrong'}
+  return'<button class="'+cls+'" data-a="ans" data-c="'+o+'"'+(q.a!=null?' disabled':'')+'>'+(t==='k2r'?romajiOf(o):t==='x'?other(o):o)+'</button>'}).join('');
+ var ask=t==='r2k'?'<div class="romaji" style="font-size:54px">'+romajiOf(q.c)+'</div><p class="muted">Welches Zeichen ist das?</p>'
+  :'<div class="sq big'+(isKata(q.c)?' kk':'')+'"><span>'+q.c+'</span></div><p class="muted">'+(t==='x'?'Welches '+(isKata(q.c)?'Hiragana':'Katakana')+' gehört dazu?':'Wie liest man das?')+'</p>';
+ var fb=st.cross?'<b class="jp" style="font-size:20px">'+h+' <span class="kk">'+toKata(h)+'</span></b> = '+romajiOf(q.c)+'. '+esc(BR[h][1])
+  :'<b class="jp" style="font-size:20px">'+q.c+'</b> = '+romajiOf(q.c)+'. '+md(M[q.c]);
  return'<div class="stage">'+stageHead('Kana-Quiz','Frage '+(st.n+1)+' von '+st.total,st.n/st.total)+
- '<div class="flash" style="min-height:200px">'+(k2r?'<div class="sq big"><span>'+q.c+'</span></div><p class="muted">Wie liest man das?</p>':'<div class="romaji" style="font-size:54px">'+romajiOf(q.c)+'</div><p class="muted">Welches Zeichen ist das?</p>')+'</div>'+
- '<div class="opts">'+opts+'</div>'+
- (q.a!=null?'<div class="mnemo"><b class="jp" style="font-size:20px">'+q.c+'</b> = '+romajiOf(q.c)+'. '+md(M[q.c])+'</div><div class="row">'+spk(toHiraCh(q.c))+'<button class="btn pri grow" data-a="qnext">Weiter</button></div>':'')+'</div>'}
+ '<div class="flash" style="min-height:200px">'+ask+'</div><div class="opts">'+opts+'</div>'+
+ (q.a!=null?'<div class="mnemo">'+fb+'</div><div class="row">'+spk(h)+'<button class="btn pri grow" data-a="qnext">Weiter</button></div>':'')+'</div>'}
 function itemById(id){var f=null;allPacks().some(function(p){return p.items.some(function(i){if(i.id===id){f=i;return true}})});return f}
 function vReview(st){
  var dirs=[['de','Sprechen'],['ja','Verstehen'],['kana','Kana lesen']];
  var head=stageHead('Repetition',(st.done)+' erledigt, '+st.q.length+' offen',st.done/(st.done+st.q.length||1))+
   '<div class="seg" role="group" aria-label="Richtung">'+dirs.map(function(d){return'<button data-a="set" data-k="dir" data-v="'+d[0]+'" aria-pressed="'+(S.set.dir===d[0])+'">'+d[1]+'</button>'}).join('')+'</div>';
- if(!st.q.length)return'<div class="stage">'+head+'<div class="flash"><span class="hanko" style="width:54px;height:54px;font-size:30px">済</span><h2>Für heute erledigt</h2><p class="muted">'+st.done+' Karten. Morgen kommen die nächsten.</p></div><button class="btn pri" data-a="closestage">Schliessen</button></div>';
+ if(!st.q.length){st.note=st.note||pickNote();return'<div class="stage">'+head+'<div class="flash"><span class="hanko" style="width:54px;height:54px;font-size:30px">済</span><h2>Für heute erledigt</h2><p class="muted">'+st.done+' Karten. Morgen kommen die nächsten.</p></div><button class="btn pri" data-a="closestage">Schliessen</button>'+noteCard(st.note,true)+'</div>'}
  var it=itemById(st.q[0]);if(!it){st.q.shift();return vReview(st)}
  var dir=S.set.dir,isNew=!S.cards[it.id],front='',showK=S.set.kana;
  if(dir==='de')front='<p class="eyebrow">Sag es auf Japanisch</p><div class="q">'+esc(it.d)+'</div>';
@@ -695,9 +874,9 @@ function go(){render();window.scrollTo(0,0)}
 
 /* ---------- Aktionen ---------- */
 function startLesson(script,rowId){var row=rowId?ROWS.filter(function(r){return r[0]===rowId})[0]:null;
- if(!row){for(var i=0;i<ROWS.length;i++)if(S.learned[script].indexOf(ROWS[i][0])<0){row=ROWS[i];break}}
- if(!row)row=ROWS[0];ui.script=script;ui.stage={t:'lesson',script:script,row:row,i:0};go()}
-function startQuiz(pool,focus,total){if(!pool.length)return;var st={t:'quiz',pool:pool,focus:focus||[],n:0,total:total||10,ok:0,miss:[],q:null};st.q=makeQ(st);ui.stage=st;go()}
+ if(!row){for(var i=0;i<ROWS.length;i++)if(!rowDone(ROWS[i],script)){row=ROWS[i];break}}
+ if(!row)row=ROWS[0];ui.script=script;S.set.kscript=script;save();ui.stage={t:'lesson',script:script,row:row,i:0};go()}
+function startQuiz(pool,focus,total,cross){if(!pool.length)return;var st={t:'quiz',pool:pool,focus:focus||[],n:0,total:total||10,ok:0,miss:[],q:null,cross:!!cross};st.q=makeQ(st);ui.stage=st;go()}
 function startReview(){var q=dueItems().map(function(i){return i.id}).concat(newItems().slice(0,8).map(function(i){return i.id}));if(!q.length)return;
  ui.stage={t:'review',q:q,done:0,shown:false,peek:false};go();if(S.set.dir==='ja'&&S.set.auto){var it=itemById(q[0]);if(it)speak(it.k)}}
 function promptFor(topic){return'Du bist Japanischlehrer für einen deutschsprachigen Anfänger, der in Osaka leben wird. Situation: «'+topic+'».\n'+
@@ -719,21 +898,22 @@ function appVersion(){try{return X.android.version()}catch(e){return''}}
 
 var ACT={
  tab:function(d){ui.tab=d.t;ui.stage=null;ui.open=null;ui.sel=null;go()},
- script:function(d){ui.script=d.s;ui.sel=null;render()},
+ script:function(d){ui.script=d.s;S.set.kscript=d.s;save();render()},
  sel:function(d){ui.sel=d.c;render();if(S.set.auto)speak(toHiraCh(d.c))},
  unsel:function(){ui.sel=null;render()},
  say:function(d){speak(d.t)},
  rules:function(){ui.tab='kana';ui.rulesOpen=true;render();var r=$('rules');if(r)r.scrollIntoView()},
  lesson:function(d){startLesson(d.s||ui.script,d.r)},
  lprev:function(){ui.stage.i--;render()},
- lnext:function(){var st=ui.stage,chars=rowChars(st.row,st.script);
+ lnext:function(){var st=ui.stage,both=st.script==='b',chars=rowChars(st.row,st.script);
   if(st.i<chars.length-1){st.i++;render();if(S.set.auto)speak(toHiraCh(chars[st.i]));return}
-  var L=S.learned[st.script];if(L.indexOf(st.row[0])<0)L.push(st.row[0]);touchDay();save();
-  var pool=[];ROWS.forEach(function(r){if(L.indexOf(r[0])>=0)pool=pool.concat(rowChars(r,st.script))});startQuiz(pool,chars,8)},
- quiz:function(d){var sc=ui.tab==='kana'?ui.script:(S.learned.k.length&&S.learned.h.length>=10?'k':'h'),pool=[];
-  if(d.all)pool=allChars(sc);else ROWS.forEach(function(r){if(S.learned[sc].indexOf(r[0])>=0)pool=pool.concat(rowChars(r,sc))});
-  if(!pool.length)pool=allChars(sc);startQuiz(pool,[],10)},
- quizagain:function(){var st=ui.stage;startQuiz(st.pool,st.miss,st.total)},
+  var ss=both?['h','k']:[st.script];ss.forEach(function(s){if(S.learned[s].indexOf(st.row[0])<0)S.learned[s].push(st.row[0])});touchDay();save();
+  var pool=[];ss.forEach(function(s){ROWS.forEach(function(r){if(S.learned[s].indexOf(r[0])>=0)pool=pool.concat(rowChars(r,s))})});
+  startQuiz(pool,both?chars.concat(chars.map(toKata)):chars,both?10:8,both)},
+ quiz:function(d){var sc=ui.tab==='kana'?ui.script:(S.set.kscript==='b'?'b':(S.learned.k.length&&S.learned.h.length>=10?'k':'h')),pool=[],ss=sc==='b'?['h','k']:[sc];
+  ss.forEach(function(s){if(d.all)pool=pool.concat(allChars(s));else ROWS.forEach(function(r){if(S.learned[s].indexOf(r[0])>=0)pool=pool.concat(rowChars(r,s))})});
+  if(!pool.length)ss.forEach(function(s){pool=pool.concat(allChars(s))});startQuiz(pool,[],10,sc==='b')},
+ quizagain:function(){var st=ui.stage;startQuiz(st.pool,st.miss,st.total,st.cross)},
  ans:function(d){var st=ui.stage,q=st.q;if(q.a!=null)return;q.a=d.c;var ok=d.c===q.c,k=S.kana[q.c]||(S.kana[q.c]={s:0,n:0});k.n++;k.s=ok?k.s+1:0;
   if(ok)st.ok++;else if(st.miss.indexOf(q.c)<0)st.miss.push(q.c);touchDay();save();render();if(S.set.auto)speak(toHiraCh(q.c))},
  qnext:function(){var st=ui.stage;st.n++;if(st.n<st.total)st.q=makeQ(st);go()},
@@ -745,7 +925,7 @@ var ACT={
   S.cards[id]=c;touchDay();save();st.shown=false;st.peek=false;go();
   if(st.q.length&&S.set.dir==='ja'&&S.set.auto){var it=itemById(st.q[0]);if(it)speak(it.k)}},
  closestage:function(){ui.stage=null;go()},
- open:function(d){ui.open=d.p;ui.confirm=null;go()},
+ open:function(d){ui.tab='words';ui.stage=null;ui.open=d.p;ui.confirm=null;go()},
  closepack:function(){ui.open=null;go()},
  toggle:function(d){var i=S.active.indexOf(d.p);if(i>=0)S.active.splice(i,1);else S.active.push(d.p);save();render()},
  delpack:function(d){if(ui.confirm!==d.p){ui.confirm=d.p;render();return}var p=packById(d.p);if(p)p.items.forEach(function(i){delete S.cards[i.id]});
@@ -783,7 +963,7 @@ window.__kd={
   if(info.error)ui.upd.msg='Suche fehlgeschlagen: '+info.error;else if(!info.available)ui.upd.msg='Du hast die neuste Version.';render()},
  onProgress:function(p){if(ui.upd){ui.upd.pct=p;if(ui.tab==='more'&&!ui.stage)render()}},
  onInstall:function(msg){if(ui.upd){ui.upd.busy=false;ui.upd.msg=msg}render()},
- _test:{toHira:toHira,laut:laut,romajiOf:romajiOf}
+ _test:{BR:BR,MH:MH,MK:MK,CULT:CULT,ORIH:ORIH,ORIK:ORIK,B:BUILTIN,toHira:toHira,laut:laut,romajiOf:romajiOf}
 };
 
 /* ---------- Start ---------- */
