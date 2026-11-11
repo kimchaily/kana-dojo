@@ -1,11 +1,9 @@
 name: Release
 
-# Jeder Push auf main baut eine signierte APK und veröffentlicht sie als GitHub-Release.
-# Die App vergleicht ihre Build-Nummer mit dem neusten Release und aktualisiert sich selbst.
+# Baut eine signierte Android-APK und veröffentlicht sie als GitHub-Release.
+# Nur noch von Hand (Actions → Release → Run workflow): Die Web-App auf GitHub Pages ist der Hauptweg,
+# weil Google Play Protect die APK mit Selbst-Update als schädlich blockiert.
 on:
-  push:
-    branches: [main]
-    paths-ignore: ['**.md']
   workflow_dispatch:
 
 permissions:

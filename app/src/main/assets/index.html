@@ -487,18 +487,18 @@ function scriptName(s){return s==='k'?'Katakana':'Hiragana'}
 function uid(){return Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4)}
 
 /* ---------- Ton ---------- */
-function canSpeak(){return!!((X.android&&X.andTts==='ok')||X.voice||X.tts)}
+function canSpeak(){return!!((X.android&&X.andTts==='ok')||X.voice||X.webLang||X.tts)}
 function speak(text){
  if(!text)return;var rate=+S.set.rate||0.85;text=String(text).replace(/[?？!！、,]/g,' ').trim();
  try{
   if(X.android&&X.andTts==='ok'){X.android.speak(text,rate);return}
-  if(X.voice){speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(text);u.voice=X.voice;u.lang=X.voice.lang;u.rate=rate;speechSynthesis.speak(u);return}
+  if(X.voice||X.webLang){speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(text);if(X.voice)u.voice=X.voice;u.lang=X.voice?X.voice.lang:'ja-JP';u.rate=rate;speechSynthesis.speak(u);return}
   if(X.tts){X.tts.speak(text,{language:'ja',rate:Math.max(0.7,Math.min(1.5,rate))}).catch(function(e){if(e&&e.code==='not_granted'){X.tts=null;render()}})}
  }catch(e){}}
 function spk(text,cls){return canSpeak()?'<button class="ico '+(cls||'')+'" data-a="say" data-t="'+esc(text)+'" aria-label="Anhören" title="Anhören">🔊</button>':''}
 function initAudio(){
  if(X.android){try{X.andTts=X.android.ttsState()}catch(e){}}
- try{if('speechSynthesis'in window&&!X.android){var pick=function(){var v=speechSynthesis.getVoices().filter(function(v){return/^ja/i.test(v.lang)})[0];if(v&&!X.voice){X.voice=v;render()}};pick();speechSynthesis.onvoiceschanged=pick}}catch(e){}
+ try{if('speechSynthesis'in window&&!X.android){var pick=function(){var v=speechSynthesis.getVoices().filter(function(v){return/^ja/i.test(v.lang)})[0];if(v&&!X.voice){X.voice=v;render()}};pick();speechSynthesis.onvoiceschanged=pick;setTimeout(function(){try{if(!X.voice&&!X.tts&&!speechSynthesis.getVoices().length&&/Android/i.test(navigator.userAgent)){X.webLang=true;render()}}catch(e){}},1500)}}catch(e){}
  if(window.claude&&claude.use){
   claude.use('tts').then(function(t){if(t){X.tts=t;render()}}).catch(function(){});
   claude.use('sample').then(function(s){if(s){X.sample=s;render()}}).catch(function(){});
@@ -508,8 +508,10 @@ function initAudio(){
 function applyTheme(){var r=document.documentElement;
  if(S.set.mode==='auto')r.removeAttribute('data-mode');else r.setAttribute('data-mode',S.set.mode);
  r.setAttribute('data-skin',S.set.skin);
- if(X.android&&X.android.setBars){try{var bg=getComputedStyle(document.body).backgroundColor,c=document.createElement('canvas');c.width=c.height=1;var g=c.getContext('2d');g.fillStyle=bg;g.fillRect(0,0,1,1);var p=g.getImageData(0,0,1,1).data;
-  var hex='#'+[p[0],p[1],p[2]].map(function(n){return('0'+n.toString(16)).slice(-2)}).join('');X.android.setBars(hex,(p[0]+p[1]+p[2])/3<128)}catch(e){}}}
+ try{var bg=getComputedStyle(document.body).backgroundColor,c=document.createElement('canvas');c.width=c.height=1;var g=c.getContext('2d');g.fillStyle=bg;g.fillRect(0,0,1,1);var p=g.getImageData(0,0,1,1).data;
+  var hex='#'+[p[0],p[1],p[2]].map(function(n){return('0'+n.toString(16)).slice(-2)}).join('');
+  var mt=document.querySelector('meta[name=theme-color]');if(mt)mt.setAttribute('content',hex);
+  if(X.android&&X.android.setBars)X.android.setBars(hex,(p[0]+p[1]+p[2])/3<128)}catch(e){}}
 
 function sq(ch,o){o=o||{};var st=S.kana[ch],ok=st&&st.s>=3;
  return'<button class="sq'+(o.on?' on':'')+(ok?' ok':'')+'" data-a="sel" data-c="'+ch+'" aria-label="'+ch+' '+romajiOf(ch)+'"><span>'+ch+'</span><small>'+(ok?'✓ ':'')+romajiOf(ch)+'</small></button>'}
@@ -601,7 +603,7 @@ function vPack(){var p=packById(ui.open);if(!p){ui.open=null;return vWords()}var
 function vMore(){
  var skins=[['ai','藍 Indigo',265,1],['matcha','抹茶 Matcha',148,1],['sakura','桜 Sakura',355,1],['kaki','柿 Kaki',62,1],['sumi','墨 Tusche',265,0]];
  var io=ui.io||{},u=ui.upd||{};
- var tts=X.android?(X.andTts==='ok'?'Android-Sprachausgabe (Japanisch)':X.andTts==='nolang'?'Japanische Stimme fehlt auf dem Gerät':'Sprachausgabe startet …'):X.voice?'Browser-Stimme: '+X.voice.name:X.tts?'Claude-Stimme (liest Kana, Akzent kann abweichen)':'Keine Sprachausgabe verfügbar, die Lesehilfe «≈» bleibt';
+ var tts=X.android?(X.andTts==='ok'?'Android-Sprachausgabe (Japanisch)':X.andTts==='nolang'?'Japanische Stimme fehlt auf dem Gerät':'Sprachausgabe startet …'):X.voice?'Browser-Stimme: '+X.voice.name:X.webLang?'Browser-Sprachausgabe (Japanisch)':X.tts?'Claude-Stimme (liest Kana, Akzent kann abweichen)':'Keine Sprachausgabe verfügbar, die Lesehilfe «≈» bleibt';
  return'<div class="stack"><h1>Mehr</h1>'+
  '<section class="card stack-s"><h2>Aussprache in zwei Minuten</h2><p class="muted small">Die Zeile «≈» unter jedem Eintrag ist eine deutsche Lese-Annäherung: «ss» ist ein scharfes s, einfaches «s» ein weiches wie in Sonne, «’» eine kurze Pause.</p><div class="guide">'+
   '<div><b>Vokale</b> kurz und klar: a, i, u, e, o wie in Katze, Mitte, Kuss, Bett, Motte. Das u ohne runde Lippen.</div>'+
@@ -621,6 +623,7 @@ function vMore(){
   '<div class="stack-s"><span class="eyebrow">Kana auf der Karte</span><div class="seg">'+[['reveal','Erst bei der Lösung'],['always','Immer'],['never','Nie']].map(function(m){return'<button data-a="set" data-k="kana" data-v="'+m[0]+'" aria-pressed="'+(S.set.kana===m[0])+'">'+m[1]+'</button>'}).join('')+'</div></div>'+
   '<div class="stack-s"><span class="eyebrow">Sprechtempo</span><div class="seg">'+[[0.7,'Langsam'],[0.85,'Ruhig'],[1,'Normal']].map(function(m){return'<button data-a="set" data-k="rate" data-v="'+m[0]+'" aria-pressed="'+(+S.set.rate===m[0])+'">'+m[1]+'</button>'}).join('')+'</div></div>'+
   '<div class="stack-s"><span class="eyebrow">Ton bei der Lösung</span><div class="seg">'+[[1,'Automatisch'],[0,'Nur auf Tippen']].map(function(m){return'<button data-a="set" data-k="auto" data-v="'+m[0]+'" aria-pressed="'+(!!S.set.auto===!!m[0])+'">'+m[1]+'</button>'}).join('')+'</div></div></section>'+
+ (!X.android&&location.protocol==='https:'&&/github\.io$/.test(location.hostname)?'<section class="card stack-s"><h2>Updates</h2><p class="muted small">Die Web-App holt neue Versionen von selbst, sobald du online bist. Offline läuft die zuletzt geladene Version.</p></section>':'')+
  (X.android?'<section class="card stack-s"><h2>App-Update</h2><p class="muted small">Installiert: Version '+esc(u.current||appVersion())+'</p>'+
   (u.available?'<p><b>Version '+esc(u.version)+' ist verfügbar.</b></p>'+(u.notes?'<p class="small muted" style="white-space:pre-wrap">'+esc(u.notes).slice(0,600)+'</p>':'')+
    '<button class="btn pri" data-a="install"'+(u.busy?' disabled':'')+'>'+(u.busy?'Lädt … '+(u.pct||0)+' %':'Herunterladen und installieren')+'</button>':
