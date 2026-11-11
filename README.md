@@ -12,8 +12,9 @@ Japanisch-Trainer für den Alltag: Hiragana und Katakana mit Eselsbrücken, Wort
 | `tools/build-web.sh` | Bettet `web/app.html` als `app/src/main/assets/index.html` in die Android-App ein. |
 | `app/` | Android-Hülle (ein `WebView`, Java, keine Bibliotheken): Sprachausgabe, Systemleisten, Update. |
 | `web/pwa/` | Manifest, Service Worker und Icons der installierbaren Web-App. |
-| `tools/build-pages.sh` | Baut die Web-App nach `site/`. |
-| `.github/workflows/pages.yml` | Veröffentlicht die Web-App bei jedem Push auf `main` auf GitHub Pages. |
+| `tools/build-pages.sh` | Baut die Web-App nach `site/`, als Produktion oder als Vorschau. |
+| `tools/pages-portal.py` | Erzeugt die Übersichtsseite der Vorschauen. |
+| `.github/workflows/pages.yml` | Veröffentlicht `main` als Produktion und jeden offenen Pull Request als Vorschau auf GitHub Pages. |
 | `.github/workflows/release.yml` | Baut auf Knopfdruck eine signierte APK (Actions → Release → Run workflow). |
 
 ## Warum zuerst die Web-App
@@ -22,8 +23,32 @@ Google Play Protect blockiert die APK als «Harmful app», sehr wahrscheinlich w
 
 ## Web-App einrichten
 
-1. *Settings → Pages → Build and deployment → Source:* «GitHub Actions».
-2. Auf `main` pushen. Unter *Actions* läuft «Web-App», danach ist die Seite unter der Adresse oben erreichbar.
+1. *Settings → Pages → Build and deployment → Source:* «Deploy from a branch», Branch `gh-pages`, Ordner `/ (root)`. Den Branch `gh-pages` legt der Workflow beim ersten Lauf selbst an.
+2. Auf `main` pushen oder einen Pull Request öffnen. Unter *Actions* läuft «Web-App – Produktion und PR-Vorschau».
+
+## Entwicklungsablauf mit Vorschau
+
+Neue Funktionen gehen nie direkt auf `main`, sondern immer über einen Branch mit Pull Request. So lässt sich jede Änderung auf dem Telefon testen, bevor sie in der installierten App landet.
+
+1. **Branch und Pull Request:** Änderung auf einem eigenen Branch entwickeln, Pull Request gegen `main` öffnen.
+2. **Vorschau testen:** Der Workflow veröffentlicht den Branch unter `https://kimchaily.github.io/kana-dojo/preview/<branch>/` und kommentiert den Link im Pull Request. Jeder weitere Push aktualisiert die Vorschau nach etwa einer Minute.
+3. **Freigeben:** Pull Request mergen. `main` wird zur Produktion, die Vorschau verschwindet von selbst.
+
+| Auslöser | Ergebnis |
+| --- | --- |
+| Push auf `main` | Produktion unter `…/kana-dojo/` |
+| Offener Pull Request | Vorschau unter `…/kana-dojo/preview/<branch>/` |
+| Pull Request geschlossen oder gemergt | Vorschau wird entfernt |
+
+**Übersicht:** <https://kimchaily.github.io/kana-dojo/preview/> listet die Produktion und alle offenen Vorschauen.
+
+**Was eine Vorschau von der Produktion unterscheidet:**
+
+- **Eigener Lernstand:** Beim ersten Öffnen kopiert die Vorschau den Lernstand der Produktion auf diesem Gerät und speichert danach getrennt (`kanadojo.v1@<branch>`). Der echte Lernstand bleibt unverändert.
+- **Kein Service Worker, nicht installierbar:** Eine Vorschau lädt immer frisch aus dem Netz und läuft nicht offline.
+- **Marke oben rechts:** «Vorschau · Commit». Ein Tipp darauf führt zur Übersicht.
+
+**Selbstheilung:** Bei jedem Lauf entfernt der Workflow Vorschauen, zu denen es keinen offenen Pull Request mehr gibt.
 
 ## Android-APK (optional)
 
@@ -34,7 +59,7 @@ Google Play Protect blockiert die APK als «Harmful app», sehr wahrscheinlich w
 
 ## Updates
 
-**Web-App:** Jeder Push auf `main` ist nach etwa einer Minute online. Die installierte Web-App lädt beim Öffnen mit Netz die neue Version, offline läuft die zuletzt geladene.
+**Web-App:** Jeder Merge nach `main` ist nach etwa einer Minute online. Die installierte Web-App lädt beim Öffnen mit Netz die neue Version, offline läuft die zuletzt geladene.
 
 **APK:** Jeder manuelle Release-Lauf erzeugt Version `1.0.<Laufnummer>`. Die App prüft beim Start höchstens einmal pro Tag und unter *Mehr → App-Update* auf Wunsch, ob ein neueres Release existiert, lädt die APK und startet die Installation. Der Lernstand bleibt erhalten.
 
@@ -46,6 +71,7 @@ Kana, Eselsbrücken und Startpakete stehen als Daten oben im Skript von `web/app
 
 ```bash
 bash tools/build-pages.sh && (cd site && python3 -m http.server 8000)   # Web-App
+PREVIEW_SLUG=test bash tools/build-pages.sh                             # Web-App als Vorschau
 bash tools/build-web.sh
 ./gradlew assembleDebug
 ```
