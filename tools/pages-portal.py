@@ -78,6 +78,10 @@ def render(previews, repo):
 <html lang="de"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex">
+<meta name="theme-color" content="#b3261e">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="../icon-192.png"><link rel="apple-touch-icon" href="../apple-touch-icon.png">
 <title>Kana Dōjō – Vorschauen</title>
 <style>
 :root{{--accent:#3d4fb8;--bg:#f4f5fa;--card:#fff;--text:#1d2030;--muted:#6b7086;--line:#0000001a}}
@@ -105,6 +109,7 @@ footer{{color:var(--muted);font-size:.78rem;margin-top:30px;text-align:center}}
 <div class="card"><a class="t" href="../">Kana Dōjō (main)</a><span class="m">Der Stand, den die installierte App lädt</span><a class="go" href="../">App öffnen →</a></div>
 <h2>Vorschauen</h2>
 {body}
+<p class="note">Diese Seite lässt sich installieren: im Browser-Menü «Zum Startbildschirm hinzufügen».</p>
 <p class="note">Jede Vorschau startet mit einer Kopie deines Lernstands von diesem Gerät und speichert danach getrennt. Der echte Lernstand bleibt unverändert.</p>
 <footer>Automatisch erzeugt am {now}</footer>
 </div></body></html>
@@ -117,6 +122,22 @@ def write_portal(args):
     previews = load_previews(preview_dir)
     with open(os.path.join(preview_dir, "index.html"), "w", encoding="utf-8") as fh:
         fh.write(render(previews, args.repo))
+    # Eigenes Manifest: Die Übersicht lässt sich neben der echten App auf dem Startbildschirm ablegen.
+    manifest = {
+        "name": "Kana Dōjō – Vorschauen",
+        "short_name": "Dōjō Vorschau",
+        "start_url": "./",
+        "scope": "./",
+        "display": "standalone",
+        "background_color": "#f4f5fa",
+        "theme_color": "#b3261e",
+        "icons": [
+            {"src": "../icon-192.png", "sizes": "192x192", "type": "image/png"},
+            {"src": "../icon-512.png", "sizes": "512x512", "type": "image/png"},
+        ],
+    }
+    with open(os.path.join(preview_dir, "manifest.webmanifest"), "w", encoding="utf-8") as fh:
+        json.dump(manifest, fh, ensure_ascii=False, indent=2)
     print(f"Portal geschrieben: {len(previews)} Vorschau(en)")
 
 

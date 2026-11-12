@@ -14,6 +14,9 @@ Japanisch-Trainer für den Alltag: Hiragana und Katakana mit Eselsbrücken, Wort
 | `web/pwa/` | Manifest, Service Worker und Icons der installierbaren Web-App. |
 | `tools/build-pages.sh` | Baut die Web-App nach `site/`, als Produktion oder als Vorschau. |
 | `tools/pages-portal.py` | Erzeugt die Übersichtsseite der Vorschauen. |
+| `tools/smoke-test.js` | Rauchtest: spielt die wichtigsten Abläufe im Browser durch. |
+| `.github/workflows/test.yml` | Führt den Rauchtest in jedem Pull Request aus. |
+| `docs/AUDIT.md` | Audit zu Lernwirkung, Bedienung und Technik. |
 | `.github/workflows/pages.yml` | Veröffentlicht `main` als Produktion und jeden offenen Pull Request als Vorschau auf GitHub Pages. |
 | `.github/workflows/release.yml` | Baut auf Knopfdruck eine signierte APK (Actions → Release → Run workflow). |
 
@@ -71,15 +74,27 @@ Der Backlog sind die [GitHub-Issues](https://github.com/kimchaily/kana-dojo/issu
 - **Labels:** `roadmap` für grössere Vorhaben, `enhancement` / `bug` / `content` für die Art, `aus-app` für Einträge aus der App.
 - **Abarbeiten:** Offene Issues sichten, umsetzen und im Commit mit `Closes #Nr` schliessen.
 
+## Lernprinzip
+
+- **Erst lernen, dann abfragen:** Neue Karten werden vorgestellt und gleich danach abgerufen. Repetition, Quiz und Kärtchen enthalten nur Gelerntes.
+- **Abrufen:** Repetition in drei Richtungen, Kana-Kärtchen zum Lesen und zum Schreiben aus dem Kopf.
+- **Unterscheiden:** Ähnliche Zeichen stehen nebeneinander, mit einem Merkmal pro Gruppe und einer eigenen Übung.
+- **Hören und Sprechen:** Dialoge in vier Schritten, dazu ein Briefing für den Sprachmodus einer KI.
+
+## Synchronisation (Beta)
+
+*Mehr → Geräte synchronisieren*: Ein GitHub-Token mit dem Recht `gist` einfügen. Der Lernstand liegt dann als `kanadojo-sync.json` in einem privaten Gist. Beim Zusammenführen gewinnt pro Karte der neuere Stand, gelernte Reihen und Pakete werden vereinigt. Darstellungs-Einstellungen bleiben pro Gerät. Das Token liegt nur auf dem Gerät und steht weder in der Sicherung noch im Gist.
+
 ## Inhalte ändern
 
-Kana, Eselsbrücken und Startpakete stehen als Daten oben im Skript von `web/app.html` (`MH`, `MK`, `BUILTIN`). Nach einer Änderung genügt ein Push.
+Kana, Eselsbrücken, ähnliche Zeichen, Dialoge, Beispielsätze und Startpakete stehen als Daten oben im Skript von `web/app.html` (`MH`, `MK`, `SIM`, `DLG`, `SENT`, `BUILTIN`). Nach einer Änderung genügt ein Push.
 
 ## Lokal bauen
 
 ```bash
 bash tools/build-pages.sh && (cd site && python3 -m http.server 8000)   # Web-App
 PREVIEW_SLUG=test bash tools/build-pages.sh                             # Web-App als Vorschau
+bash tools/build-pages.sh && node tools/smoke-test.js                   # Rauchtest (braucht Playwright)
 bash tools/build-web.sh
 ./gradlew assembleDebug
 ```

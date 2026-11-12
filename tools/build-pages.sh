@@ -34,6 +34,7 @@ fi
     printf '%s' "<script>window.__KD_PREVIEW=\"${slug}\"</script>"
     printf '%s' '<style>.kd-pv{position:fixed;top:calc(6px + env(safe-area-inset-top,0px));right:8px;z-index:60;background:#b3261e;color:#fff;font:700 11px/1 system-ui,sans-serif;padding:6px 10px;border-radius:999px;text-decoration:none;opacity:.92;max-width:60vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}body.staged .kd-pv{opacity:.45}</style>'
   fi
+  printf '%s' "<script>window.__KD_VERSION=\"${version}\"</script>"
   printf '%s' '<link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png">'
   printf '%s' '<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>'
   if [ -z "$slug" ]; then
