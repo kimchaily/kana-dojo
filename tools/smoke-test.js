@@ -98,6 +98,13 @@ const ok = (cond, msg) => { console.log((cond ? '  ok   ' : '  FAIL ') + msg); i
   ok((await st()).dlg['d-weg'] === 4, 'Dialog: alle vier Schritte lassen sich durchspielen');
   await p.click('[data-a="closestage"]');
 
+  // 6b. Eigene Wörter aus einer Claude-Antwort übernehmen.
+  await tab('words');
+  await p.evaluate(() => { document.querySelector('#w-in').closest('details').open = true; });
+  await p.fill('#w-in', '{"items":[{"r":"kasa","k":"かさ","d":"Regenschirm","n":"Eselsbrücke: Die Kasse ist nass.","s":{"r":"Kasa wa arimasu ka?","k":"かさはありますか","d":"Haben Sie einen Schirm?"}}]}');
+  await p.click('[data-a="win"]');
+  ok((await p.textContent('#main')).includes('Regenschirm') && (await p.textContent('#main')).includes('Kasa wa arimasu ka?'), 'eigenes Wort mit Eselsbrücke und Satz landet in «Meine Wörter»');
+
   // 7. Zusammenführen zweier Geräte.
   const merged = await p.evaluate(() => {
     const T = window.__kd._test, a = JSON.parse(JSON.stringify(T.state())), b = JSON.parse(JSON.stringify(a));
