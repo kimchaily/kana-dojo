@@ -1,0 +1,27 @@
+name: Tests
+
+# Prüft in jedem Pull Request, dass die App startet und die wichtigsten Abläufe funktionieren.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Playwright installieren
+        run: |
+          npm install --no-save playwright@1
+          npx playwright install --with-deps chromium
+      - name: Web-App bauen
+        run: bash tools/build-pages.sh test
+      - name: Rauchtest
+        run: node tools/smoke-test.js
