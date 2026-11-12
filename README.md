@@ -85,6 +85,14 @@ Der Backlog sind die [GitHub-Issues](https://github.com/kimchaily/kana-dojo/issu
 
 *Mehr → Geräte synchronisieren*: Ein GitHub-Token mit dem Recht `gist` einfügen. Der Lernstand liegt dann als `kanadojo-sync.json` in einem privaten Gist. Beim Zusammenführen gewinnt pro Karte der neuere Stand, gelernte Reihen und Pakete werden vereinigt. Darstellungs-Einstellungen bleiben pro Gerät. Das Token liegt nur auf dem Gerät und steht weder in der Sicherung noch im Gist.
 
+## Sprachen
+
+Die App läuft auf Deutsch oder Englisch (*Mehr → Darstellung → Sprache · Language*).
+
+- **Inhalte** (Eselsbrücken, Pakete, Sätze, Dialoge, Kultur-Hinweise, ähnliche Zeichen) stehen auf Englisch in `EN_DATA`, mit denselben IDs wie die deutschen. Der Lernstand bleibt beim Wechsel erhalten.
+- **Oberfläche:** Die App rendert Deutsch. Im englischen Modus ersetzt `trDom` die sichtbaren Texte über das Wörterbuch `UI_EN` und die Muster `UI_RX`. Neue deutsche Texte dort ergänzen. Der Rauchtest meldet deutsche Reste im englischen Modus.
+- **Eigene Pakete und Wörter** behalten die Sprache, in der sie angelegt wurden.
+
 ## Inhalte ändern
 
 Kana, Eselsbrücken, ähnliche Zeichen, Dialoge, Beispielsätze und Startpakete stehen als Daten oben im Skript von `web/app.html` (`MH`, `MK`, `SIM`, `DLG`, `SENT`, `BUILTIN`). Nach einer Änderung genügt ein Push.

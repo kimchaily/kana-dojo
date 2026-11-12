@@ -133,6 +133,38 @@ const ok = (cond, msg) => { console.log((cond ? '  ok   ' : '  FAIL ') + msg); i
   });
   ok(merged.join('|') === '3|2|ka|a|cz', 'Zusammenführen: neuerer Stand gewinnt pro Karte, Gelöschtes bleibt gelöscht');
 
+  // 8. Englisch: Daten vollständig, keine deutschen Reste auf den Hauptseiten.
+  const enData = await p.evaluate(() => {
+    const T = window.__kd._test, E = T.EN_DATA, D = T.DE, bad = [];
+    Object.keys(D.MH).forEach(k => { if (!E.mh[k]) bad.push('mh ' + k); });
+    Object.keys(D.MK).forEach(k => { if (!E.mk[k]) bad.push('mk ' + k); });
+    Object.keys(D.BR).forEach(k => { if (!E.br[k]) bad.push('br ' + k); });
+    D.SIM.forEach(g => { if (!E.sim[g[0]]) bad.push('sim ' + g[0]); });
+    D.CULT.forEach(n => { if (!E.cult[n.id]) bad.push('cult ' + n.id); });
+    Object.keys(D.SENT).forEach(k => { if (!E.sent[k]) bad.push('sent ' + k); });
+    D.BUILTIN.forEach(pk => { const x = E.packs[pk.id]; if (!x || x[2].length !== pk.items.length) bad.push('pack ' + pk.id); });
+    D.DLG.forEach(d => { const x = E.dlg[d.id]; if (!x || x.d.length !== d.lines.length || x.q.length !== d.q.length) bad.push('dlg ' + d.id); });
+    return bad;
+  });
+  ok(enData.length === 0, 'englische Inhalte sind vollständig ' + enData.join(', '));
+  await tab('more');
+  await p.click('[data-a="set"][data-k="lang"][data-v="en"]');
+  const german = /[äöüßÄÖÜ]|\b(und|der|die|das|nicht|ist|mit|auf|eine?|noch|nur|wird|sind|für|bitte|Karten?|Paket|Schritt|von|du|dir|gelernt|zuerst|oder|Lernstand)\b/;
+  const leftovers = [];
+  const scan = async where => { const t = await p.evaluate(() => { const o = []; const w = document.createTreeWalker(document.querySelector('#main'), NodeFilter.SHOW_TEXT); let n; while ((n = w.nextNode())) if (n.parentNode.nodeName !== 'TEXTAREA') o.push(n.nodeValue.trim()); document.querySelectorAll('#nav button').forEach(b => o.push(b.textContent)); return o; });
+    t.filter(x => x && !x.startsWith('≈') && german.test(x) && !/Eselsbrücke: Die Kasse|Haben Sie|Regenschirm/.test(x)).forEach(x => leftovers.push(where + ': ' + x)); };
+  for (const t of ['home', 'kana', 'words', 'more']) { await tab(t); await scan(t); }
+  await tab('words'); await p.click('[data-a="open"][data-p="veg"]'); await scan('pack');
+  await tab('home'); await p.click('[data-a="learn"]'); await scan('learn'); await p.click('[data-a="closestage"]');
+  await tab('kana'); await p.click('[data-a="sim"][data-g="あお"]'); await scan('sim'); await p.click('[data-a="closestage"]');
+  await tab('words'); await p.click('[data-a="dlgopen"][data-d="d-rest"]'); await p.click('[data-a="dlgstep"][data-v="2"]'); await p.click('[data-a="dlgnext"]'); await scan('dialog'); await p.click('[data-a="closestage"]');
+  ok(leftovers.length === 0, 'Englisch: keine deutschen Reste ' + leftovers.slice(0, 5).join(' | '));
+  ok((await p.textContent('nav')).includes('Today'), 'Englisch: Navigation übersetzt');
+  await tab('more');
+  ok((await p.textContent('[data-notr]')).includes('Deutsch'), 'Englisch: Sprachwahl zeigt «Deutsch» unübersetzt');
+  await tab('more'); await p.click('[data-a="set"][data-k="lang"][data-v="de"]');
+  ok((await p.textContent('nav')).includes('Heute'), 'zurück auf Deutsch');
+
   ok(errs.length === 0, 'keine Konsolenfehler im ganzen Durchlauf ' + errs.join(' | '));
   await browser.close();
   console.log(failed ? `\n${failed} Prüfung(en) fehlgeschlagen` : '\nAlle Prüfungen bestanden');
