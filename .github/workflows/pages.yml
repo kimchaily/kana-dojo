@@ -122,7 +122,10 @@ jobs:
               ;;
           esac
 
-          if [ ! -f index.html ]; then
+          # Produktion bei jedem Vorschau- und Aufräum-Lauf aus dem aktuellen main
+          # nachziehen. GitHub verwirft wartende Läufe derselben concurrency-Gruppe;
+          # so landet die neuste Version auch dann, wenn der main-Lauf verworfen wurde.
+          if [ "$MODE" != "production" ] || [ ! -f index.html ]; then
             root_from_main || echo "::warning::Produktion konnte nicht aus main gebaut werden."
           fi
 
