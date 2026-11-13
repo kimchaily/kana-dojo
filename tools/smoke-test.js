@@ -83,6 +83,16 @@ const ok = (cond, msg) => { console.log((cond ? '  ok   ' : '  FAIL ') + msg); i
   await p.click('.opt >> nth=0'); await p.click('[data-a="qnext"]');
   await p.click('[data-a="closestage"]');
 
+  // 5b. Kana-Repetition: nach der Lektion morgen fällig, dann auf «Heute» abrufbar.
+  ok(await p.evaluate(() => { const s = window.__kd._test.state(); return ['あ','い','う','え','お'].every(c => s.kana[c] && s.kana[c].d > 0) && window.__kd._test.kanaDue().every(c => s.kana[c].s === 0); }), 'nach der Lektion haben alle Kana einen Termin; sofort fällig sind nur verpasste');
+  await p.evaluate(() => { const s = window.__kd._test.state(); Object.values(s.kana).forEach(k => { k.d = 1; }); });
+  await tab('home');
+  await p.click('[data-a="kdue"]');
+  ok((await p.textContent('.stage h3')).includes('Kana-Repetition'), 'fällige Kana lassen sich auf «Heute» repetieren');
+  await p.click('[data-a="kcshow"]'); await p.click('[data-a="kcgrade"][data-g="1"]');
+  ok(await p.evaluate(() => Object.values(window.__kd._test.state().kana).some(k => k.d > Date.now() + 36e5)), 'gewusstes Kana wird später wieder fällig');
+  await p.click('[data-a="closestage"]');
+
   // 6. Hör-Dialog: alle vier Schritte.
   await tab('words');
   await p.click('[data-a="dlgopen"][data-d="d-weg"]');
