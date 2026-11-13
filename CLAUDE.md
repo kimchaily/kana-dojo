@@ -8,6 +8,7 @@ Aufbau, Build und Deployment stehen im `README.md`.
 - Der Pages-Workflow veröffentlicht jeden offenen PR als Vorschau unter `https://kimchaily.github.io/kana-dojo/preview/<branch>/` (Übersicht: `…/preview/`). Nach dem Push den Vorschau-Link nennen, damit die Änderung vor dem Merge auf dem Telefon getestet werden kann.
 - Nach Änderungen an `web/app.html`: `bash tools/build-web.sh` ausführen und `app/src/main/assets/index.html` mit committen.
 - Vor dem Push: `bash tools/build-pages.sh && node tools/smoke-test.js`. Der Test läuft auch in jedem Pull Request. Neue Abläufe dort ergänzen.
+- Zweisprachig: Neue Oberflächentexte auf Deutsch schreiben und die englische Fassung in `UI_EN` (oder als Muster in `UI_RX`) ergänzen. Neue Inhalte zusätzlich in `EN_DATA`.
 - Lernprinzip der App: Nichts wird abgefragt, was nicht vorher vorgestellt wurde. Neue Übungen an gelernte Reihen oder Karten binden.
 
 ## Backlog
