@@ -105,6 +105,22 @@ const ok = (cond, msg) => { console.log((cond ? '  ok   ' : '  FAIL ') + msg); i
   await p.click('[data-a="win"]');
   ok((await p.textContent('#main')).includes('Regenschirm') && (await p.textContent('#main')).includes('Kasa wa arimasu ka?'), 'eigenes Wort mit Eselsbrücke und Satz landet in «Meine Wörter»');
 
+  // 6c. Einstellungen wirken.
+  await tab('more');
+  await p.click('[data-a="set"][data-k="kansai"][data-v="0"]');
+  await p.click('[data-a="set"][data-k="draw"][data-v="0"]');
+  await p.click('[data-a="set"][data-k="laut"][data-v="0"]');
+  await p.click('[data-a="set"][data-k="newn"][data-v="3"]');
+  await tab('words');
+  ok(await p.locator('[data-d="d-osaka"]').count() === 0, 'Einstellung Kansai aus: Osaka-Dialog verschwindet');
+  await p.click('[data-a="open"][data-p="basis"]');
+  ok(!(await p.textContent('#main')).includes('Ōkini') && !(await p.textContent('#main')).includes('≈'), 'Kansai aus: «Ōkini» fehlt; Lesehilfe aus: kein «≈»');
+  ok((await p.textContent('[data-a="learn"]')).includes('3 neue'), 'Einstellung: 3 neue Karten pro Portion');
+  await tab('kana');
+  ok(await p.locator('[data-a="kcards"][data-rev]').count() === 0, 'Zeichnen aus: «Kärtchen: schreiben» verschwindet');
+  await tab('more');
+  for (const [k, v] of [['kansai', 1], ['draw', 1], ['laut', 1], ['newn', 5]]) await p.click(`[data-a="set"][data-k="${k}"][data-v="${v}"]`);
+
   // 7. Zusammenführen zweier Geräte.
   const merged = await p.evaluate(() => {
     const T = window.__kd._test, a = JSON.parse(JSON.stringify(T.state())), b = JSON.parse(JSON.stringify(a));

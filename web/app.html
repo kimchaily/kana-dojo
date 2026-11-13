@@ -412,7 +412,7 @@ var BR={
 var CULT=[
 {id:'c1',p:'rest',y:'Üblich',t:'Das Personal kommt nicht von selbst',x:'In vielen Lokalen wartet das Personal, bis du rufst. «Sumimasen!» ist dafür normal und nicht unhöflich. Oft gibt es auch einen Rufknopf am Tisch.',w:['すみません','sumimasen','Entschuldigung']},
 {id:'c4',p:'veg',y:'Tatsache',t:'Dashi sieht man nicht',x:'Fischbrühe steckt in Misosuppe, in Udon- und Soba-Brühe, in vielen Saucen und Eierspeisen. «Vegetarisch» wird oft als «ohne sichtbares Fleisch» verstanden. Der Satz mit Dashi ist deshalb der wichtigste im Paket.',w:['だし','dashi','Brühe']},
-{id:'c13',p:'basis',y:'Osaka',t:'Osaka spricht Kansai-ben',x:'Du hörst «ōkini» für danke, «maido» als Gruss im Laden und «honma?» für «wirklich?». Standardjapanisch versteht jede und jeder. Den Dialekt musst du nicht sprechen, nur erkennen.',w:['ほんま','honma','wirklich']},
+{id:'c13',ks:1,p:'basis',y:'Osaka',t:'Osaka spricht Kansai-ben',x:'Du hörst «ōkini» für danke, «maido» als Gruss im Laden und «honma?» für «wirklich?». Standardjapanisch versteht jede und jeder. Den Dialekt musst du nicht sprechen, nur erkennen.',w:['ほんま','honma','wirklich']},
 {id:'c6',p:'shop',y:'Üblich',t:'Geld kommt aufs Tablett',x:'An der Kasse liegt ein kleines Tablett. Leg Geld oder Karte dorthin statt in die Hand. Das Wechselgeld kommt oft auf demselben Weg zurück.',w:['おつり','otsuri','Wechselgeld']},
 {id:'c5',p:'veg',y:'Regel',t:'Walnuss steht auf der Packung',x:'Auf verpackten Lebensmitteln muss Walnuss als Allergen angegeben sein. Such auf der Zutatenliste nach くるみ. In Restaurants und bei offen verkauften Speisen kannst du dich nicht darauf verlassen, dort hilft nur fragen.',w:['くるみ','kurumi','Walnuss']},
 {id:'c8',p:'weg',y:'Osaka',t:'ICOCA: die Karte, die «Gehen wir?» heisst',x:'Die Bahnkarte von JR West heisst ICOCA. Der Name spielt mit «iko ka», Kansai-Dialekt für «Gehen wir?». Sie gilt in Bahn, Bus und vielen Läden.',w:['イコカ','ikoka','ICOCA-Karte']},
@@ -717,7 +717,7 @@ var DLG=[
  ['B','Wakarimashita. Ikura desu ka?','わかりました。いくらですか','Verstanden. Was kostet es?'],
  ['A','Sen en desu.','せんえんです','1000 Yen.']],
  q:[['Was tut dir weh?',['Der Bauch','Der Kopf','Der Zahn'],1],['Wie oft am Tag nimmst du das Medikament?',['Einmal','Zweimal','Dreimal'],2]]},
-{id:'d-osaka',em:'🍓',title:'Am Marktstand in Osaka',sub:'Kansai-Dialekt erkennen',p:'shop',a:'Händlerin',note:'Die Händlerin spricht Kansai-ben: «maido» ist ein Gruss, «ya de» steht für «desu yo», «ōkini» heisst danke. Du antwortest in Standardjapanisch, das ist normal.',lines:[
+{id:'d-osaka',ks:1,em:'🍓',title:'Am Marktstand in Osaka',sub:'Kansai-Dialekt erkennen',p:'shop',a:'Händlerin',note:'Die Händlerin spricht Kansai-ben: «maido» ist ein Gruss, «ya de» steht für «desu yo», «ōkini» heisst danke. Du antwortest in Standardjapanisch, das ist normal.',lines:[
  ['A','Maido! Yasui de!','まいど！やすいで','Hallo! Günstig hier!'],
  ['B','Kono ichigo wa ikura desu ka?','このいちごはいくらですか','Was kosten diese Erdbeeren?'],
  ['A','Gohyaku en ya de.','ごひゃくえんやで','500 Yen.'],
@@ -796,7 +796,7 @@ function sentOf(it){if(it.s&&it.s.r)return it.s;var x=SENT[it.id];return x?{r:x[
 /* ---------- Zustand ---------- */
 var KEY='kanadojo.v1',DAY=864e5,INT=[0,1,3,7,16,35];
 function def(){return{v:1,kana:{},learned:{h:[],k:[]},cards:{},packs:[],active:['basis','rest','veg'],cult:[],crs:[],conf:{},dlg:{},del:{},ta:0,
- set:{mode:'auto',skin:'ai',kana:'reveal',rate:0.85,auto:true,dir:'de',kscript:'h'},streak:{last:'',n:0},upd:0}}
+ set:{mode:'auto',skin:'ai',kana:'reveal',rate:0.85,auto:true,dir:'de',kscript:'h',kansai:true,draw:true,laut:true,cultn:true,newn:5,round:20},streak:{last:'',n:0},upd:0}}
 /* Vorschau (PR-Deploy): eigener Speicher pro Branch, beim ersten Öffnen mit einer Kopie des echten Lernstands gefüllt. */
 if(window.__KD_PREVIEW){(function(){var pk=KEY+'@'+window.__KD_PREVIEW;try{var cur=localStorage.getItem(KEY);if(localStorage.getItem(pk)==null&&cur!=null)localStorage.setItem(pk,cur)}catch(e){}KEY=pk})()}
 function load(){var d=def();try{var s=JSON.parse(localStorage.getItem(KEY)||'null');if(s&&typeof s==='object'){
@@ -862,7 +862,15 @@ function touchDay(){var t=today();if(S.streak.last===t)return;var y=new Date(Dat
 function toast(m){var t=$('toast');t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(function(){t.hidden=true},2600)}
 function rowChars(row,script){return row[2].replace(/-/g,'').split('').map(function(c){return script==='k'?toKata(c):c})}
 function allChars(script){var a=[];ROWS.forEach(function(r){a=a.concat(rowChars(r,script))});return a}
-function allPacks(){return BUILTIN.concat(S.packs)}
+/* Einträge, die nur mit eingeschaltetem Kansai-Dialekt erscheinen */
+var KS={'basis:4':1};
+function builtins(){if(S.set.kansai)return BUILTIN;return BUILTIN.map(function(p){var o=Object.assign({},p);o.items=p.items.filter(function(i){return!KS[i.id]});return o})}
+function allPacks(){return builtins().concat(S.packs)}
+function dlgs(){return DLG.filter(function(d){return!d.ks||S.set.kansai})}
+function notesOk(n){return!n.ks||S.set.kansai}
+function lautLine(r){return S.set.laut?'<div class="laut">≈ '+esc(laut(r))+'</div>':''}
+function nNew(){return+S.set.newn||5}
+function nRound(){return+S.set.round||20}
 function packById(id){return allPacks().filter(function(p){return p.id===id})[0]}
 function activeItems(){var a=[];allPacks().forEach(function(p){if(S.active.indexOf(p.id)>=0)a=a.concat(p.items)});return a}
 function dueItems(){var n=Date.now();return activeItems().filter(function(it){var c=S.cards[it.id];return c&&c.d<=n})}
@@ -907,7 +915,7 @@ function sq(ch,o){o=o||{};var st=S.kana[ch],ok=st&&st.s>=3;
 
 function vHome(){
  var due=dueItems().length,nw=newItems().length,nl=nextLesson(),hl=S.learned.h.length,kl=S.learned.k.length,lc=activeItems().filter(function(i){return S.cards[i.id]}).length;
- var batch=Math.min(nw,5);
+ var batch=Math.min(nw,nNew());
  var steps=[
   {t:'Hiragana lernen',s:hl+' von 10 Reihen',done:hl>=10,now:hl<10,act:hl<10?'<button class="btn" data-a="lesson" data-s="h">Weiter</button>':''},
   {t:'Zusatzzeichen verstehen',s:'Dakuten, kleine Zeichen, Längen',done:false,now:hl>=10&&kl===0,act:'<button class="btn ghost" data-a="rules">Ansehen</button>'},
@@ -929,7 +937,7 @@ function vHome(){
    '<div class="row"><button class="btn ghost grow" data-a="quiz"'+(hl+kl?'':' disabled')+'>Quiz</button><button class="btn ghost grow" data-a="kcards"'+(hl+kl?'':' disabled')+'>Kärtchen</button></div>'+
    (hl+kl?'':'<div class="muted small">Quiz und Kärtchen fragen nur Reihen ab, die du gelernt hast.</div>')+'</section>'+
  '</div>'+
- (function(){var d=DLG.filter(function(x){return(S.dlg[x.id]||0)<4})[0];if(!d)return'';var stp=S.dlg[d.id]||0;
+ (function(){var d=dlgs().filter(function(x){return(S.dlg[x.id]||0)<4})[0];if(!d)return'';var stp=S.dlg[d.id]||0;
   return'<section class="card stack-s"><span class="eyebrow">Hören und Sprechen</span><div class="row"><span style="font-size:30px">'+d.em+'</span><div class="grow"><h3>'+esc(d.title)+'</h3><div class="muted small">Dialog · Schritt '+(stp+1)+' von 4: '+DSTEP[stp]+'</div></div><button class="btn" data-a="dlgopen" data-d="'+d.id+'">'+(stp?'Weiter':'Anhören')+'</button></div></section>'})()+
  '<section class="card"><h2>Lernpfad Schrift</h2><ol class="path">'+steps.map(function(s,i){return'<li class="'+(s.done?'done':s.now?'now':'')+'"><span class="n">'+(s.done?'✓':i+1)+'</span><div><h3>'+s.t+'</h3><div class="muted small">'+s.s+'</div></div>'+s.act+'</li>'}).join('')+'</ol>'+
  '<p class="muted small" style="margin-top:8px">Der Wortschatz läuft parallel ab dem ersten Tag, zuerst über Rōmaji und Ton.</p></section></div>'}
@@ -988,7 +996,7 @@ function vKana(){
  '<div class="cols two"><section class="card">'+rows+'</section>'+
  '<aside class="detail sheet'+(sel?'':' none')+'">'+det+'</aside></div>'+
  '<section class="card stack-s"><h2>Üben</h2><p class="muted small">Quiz und Kärtchen nehmen nur Reihen, die du gelernt hast. Kärtchen sind schwerer und wirken stärker, weil du die Antwort selbst finden musst.</p>'+
- '<div class="row"><button class="btn pri" data-a="quiz"'+(started?'':' disabled')+'>Quiz</button><button class="btn pri" data-a="kcards"'+(started?'':' disabled')+'>Kärtchen</button><button class="btn" data-a="kcards" data-rev="1"'+(started?'':' disabled')+'>Kärtchen: schreiben</button></div>'+
+ '<div class="row"><button class="btn pri" data-a="quiz"'+(started?'':' disabled')+'>Quiz</button><button class="btn pri" data-a="kcards"'+(started?'':' disabled')+'>Kärtchen</button>'+(S.set.draw?'<button class="btn" data-a="kcards" data-rev="1"'+(started?'':' disabled')+'>Kärtchen: schreiben</button>':'')+'</div>'+
  '<details><summary class="small" style="cursor:pointer;font-weight:700">Ich kenne die Kana schon</summary><div class="stack-s" style="margin-top:8px"><p class="muted small">Der Einstufungstest fragt alle '+(both?92:46)+' Zeichen ab, auch ungelernte.</p><div><button class="btn" data-a="quiz" data-all="1">Einstufungstest starten</button></div></div></details></section>'+
  vSim(sc)+
  '<details class="card"><summary>Woher die Kana kommen</summary><div class="stack-s">'+
@@ -1038,7 +1046,7 @@ function vWords(){
  return'<div class="stack"><header class="stack-s"><h1>Wörter und Situationen</h1><p class="muted">Öffne ein Paket und lerne die Einträge in kleinen Portionen. Was du gelernt hast, kommt in die Repetition.</p></header>'+
  '<section class="stack-s"><div class="packs">'+packs+'</div></section>'+
  '<section class="card stack-s" id="dlgs"><h2>Hör-Dialoge</h2><p class="muted small">Kurze Szenen aus den Sätzen deiner Pakete, in vier Schritten: nur hören, mitlesen, nachsprechen, Rollenspiel.</p><div class="packs">'+
-  DLG.map(function(d){var stp=S.dlg[d.id]||0;return'<button class="pack'+(stp>=4?' act':'')+'" data-a="dlgopen" data-d="'+d.id+'"><span class="em">'+d.em+'</span><h3>'+esc(d.title)+'</h3><span class="muted small">'+esc(d.sub)+' · '+(stp>=4?'alle Schritte geschafft':stp?'Schritt '+stp+' von 4 geschafft':d.lines.length+' Zeilen')+'</span></button>'}).join('')+'</div></section>'+
+  dlgs().map(function(d){var stp=S.dlg[d.id]||0;return'<button class="pack'+(stp>=4?' act':'')+'" data-a="dlgopen" data-d="'+d.id+'"><span class="em">'+d.em+'</span><h3>'+esc(d.title)+'</h3><span class="muted small">'+esc(d.sub)+' · '+(stp>=4?'alle Schritte geschafft':stp?'Schritt '+stp+' von 4 geschafft':d.lines.length+' Zeilen')+'</span></button>'}).join('')+'</div></section>'+
  '<section class="card stack-s"><h2>Frei sprechen mit einer KI-Stimme</h2><p class="muted small">Für den Sprachmodus von Claude oder ChatGPT: Das Briefing sagt der KI, was du schon kannst und was dir schwerfällt. Am Ende sagst du «Sync-Block» und fügst die Antwort hier ein.</p>'+
   '<label class="f">Situation <span class="muted" style="font-weight:500">optional</span><input type="text" id="talk-topic" placeholder="z. B. im Café bestellen" value="'+esc(ui.talkTopic||'')+'"></label>'+
   '<div><button class="btn pri" data-a="talkcopy">Gesprächs-Briefing kopieren</button></div>'+
@@ -1064,22 +1072,22 @@ function vWords(){
 
 function sentHtml(it){var x=sentOf(it);return x?'<div class="sent"><div class="grow"><span class="eyebrow">Im Satz</span><div><b>'+esc(x.r)+'</b></div><div class="jp">'+esc(x.k)+'</div><div class="muted small">'+esc(x.d)+'</div></div>'+spk(x.k)+'</div>':''}
 function itemRow(it,p){var c=S.cards[it.id];
- return'<div class="item"><div><div class="r">'+esc(it.r)+(c?(c.b>=3?' <span class="pill g2">sitzt</span>':''):' <span class="pill g0">neu</span>')+'</div><div class="laut">≈ '+esc(laut(it.r))+'</div><div class="k">'+esc(it.k)+'</div><div>'+esc(it.d)+'</div>'+(it.n?'<div class="muted small">'+esc(it.n)+'</div>':'')+sentHtml(it)+'</div>'+
+ return'<div class="item"><div><div class="r">'+esc(it.r)+(c?(c.b>=3?' <span class="pill g2">sitzt</span>':''):' <span class="pill g0">neu</span>')+'</div>'+lautLine(it.r)+'<div class="k">'+esc(it.k)+'</div><div>'+esc(it.d)+'</div>'+(it.n?'<div class="muted small">'+esc(it.n)+'</div>':'')+sentHtml(it)+'</div>'+
  '<div class="row">'+spk(it.k)+(p.builtin?'':'<button class="ico" data-a="delitem" data-i="'+esc(it.id)+'" aria-label="Löschen">✕</button>')+'</div></div>'}
-function vPack(){var p=packById(ui.open);if(!p){ui.open=null;return vWords()}var act=S.active.indexOf(p.id)>=0,notes=CULT.filter(function(n){return n.p===p.id}),nw=p.items.filter(function(i){return!S.cards[i.id]}).length;
+function vPack(){var p=packById(ui.open);if(!p){ui.open=null;return vWords()}var act=S.active.indexOf(p.id)>=0,notes=CULT.filter(function(n){return n.p===p.id&&notesOk(n)}),nw=p.items.filter(function(i){return!S.cards[i.id]}).length;
  return'<div class="stage" style="max-width:720px"><div class="row"><button class="btn ghost" data-a="closepack">← Pakete</button></div>'+
  '<header class="row"><span style="font-size:34px">'+esc(p.em||'🗂️')+'</span><div class="grow"><h1>'+esc(p.title)+'</h1><p class="muted">'+esc(p.sub||p.items.length+' Einträge')+'</p></div></header>'+
- '<div class="row">'+(nw?'<button class="btn pri" data-a="learn" data-p="'+esc(p.id)+'">'+Math.min(5,nw)+' neue lernen</button>':'')+'<button class="btn" data-a="toggle" data-p="'+esc(p.id)+'">'+(act?'Aus der Repetition nehmen':'In die Repetition aufnehmen')+'</button>'+(p.builtin?'':'<button class="btn ghost" data-a="delpack" data-p="'+esc(p.id)+'">'+(ui.confirm===p.id?'Wirklich löschen?':'Paket löschen')+'</button>')+'</div>'+
+ '<div class="row">'+(nw?'<button class="btn pri" data-a="learn" data-p="'+esc(p.id)+'">'+Math.min(nNew(),nw)+' neue lernen</button>':'')+'<button class="btn" data-a="toggle" data-p="'+esc(p.id)+'">'+(act?'Aus der Repetition nehmen':'In die Repetition aufnehmen')+'</button>'+(p.builtin?'':'<button class="btn ghost" data-a="delpack" data-p="'+esc(p.id)+'">'+(ui.confirm===p.id?'Wirklich löschen?':'Paket löschen')+'</button>')+'</div>'+
  '<p class="muted small">'+(p.items.length-nw)+' von '+p.items.length+' gelernt'+(act?'':' · nicht in der Repetition')+'</p>'+
  (notes.length?'<details class="card"><summary>豆知識 Gut zu wissen ('+notes.length+')</summary><div class="stack">'+notes.map(function(n){return noteCard(n,false)}).join('')+'</div></details>':'')+
  '<section class="card">'+(p.items.length?p.items.map(function(it){return itemRow(it,p)}).join(''):'<p class="muted">Noch keine Einträge.</p>')+'</section></div>'}
-function noteCard(n,link){var p=packById(n.p);
+function noteCard(n,link){if(!n)return'';var p=packById(n.p);
  return'<aside class="note"><div class="row"><span class="eyebrow grow">豆知識 · mame-chishiki · gut zu wissen</span><span class="pill g0">'+esc(n.y)+'</span></div><h3>'+esc(n.t)+'</h3><p>'+esc(n.x)+'</p>'+
  '<div class="row"><span class="jp" style="font-size:20px">'+esc(n.w[0])+'</span><span class="muted small grow">'+esc(n.w[1])+' · '+esc(n.w[2])+'</span>'+spk(n.w[0])+'</div>'+
  (link&&p?'<button class="btn ghost" data-a="open" data-p="'+esc(p.id)+'">Zum Paket «'+esc(p.title)+'»</button>':'')+'</aside>'}
-function pickNote(){var seen=function(n){return S.cult.indexOf(n.id)>=0},act=CULT.filter(function(n){return S.active.indexOf(n.p)>=0});
- var pool=act.filter(function(n){return!seen(n)});if(!pool.length)pool=CULT.filter(function(n){return!seen(n)});
- if(!pool.length){S.cult=[];pool=act.length?act:CULT}
+function pickNote(){if(!S.set.cultn)return null;var all=CULT.filter(notesOk),seen=function(n){return S.cult.indexOf(n.id)>=0},act=all.filter(function(n){return S.active.indexOf(n.p)>=0});
+ var pool=act.filter(function(n){return!seen(n)});if(!pool.length)pool=all.filter(function(n){return!seen(n)});
+ if(!pool.length){S.cult=S.cult.filter(function(id){return!all.some(function(n){return n.id===id})});pool=act.length?act:all}
  var n=pool[0];S.cult.push(n.id);save();return n}
 
 function crType(t){return CRT.filter(function(x){return x[0]===t})[0]||CRT[0]}
@@ -1100,6 +1108,9 @@ function vCr(){var d=ui.cr,open=S.crs.filter(function(c){return!c.sent}),sent=S.
   (open.length?'<h3>Noch nicht im Backlog ('+open.length+')</h3>'+open.map(item).join('')+(open.length>1?'<p class="muted small">GitHub nimmt einen Eintrag pro Formular an. Tippe die Einträge einzeln an oder kopiere alle für den Claude-Chat.</p>':''):'')+
   (sent.length?'<details><summary class="small" style="cursor:pointer;font-weight:700">Bereits gesendet ('+sent.length+')</summary><div class="stack-s" style="margin-top:8px">'+sent.map(item).join('')+'<button class="btn" data-a="crclear">Gesendete aus der Liste entfernen</button></div></details>':'')+
   '<div class="row">'+(open.length?'<button class="btn" data-a="crcopy">Offene als Text kopieren</button>':'')+'<a class="btn" href="https://github.com/'+REPO+'/issues" target="_blank" rel="noopener">Backlog ansehen</a></div></section>'}
+function segRow(label,key,opts,hint){var cur=S.set[key];
+ return'<div class="stack-s"><span class="eyebrow">'+esc(label)+'</span><div class="seg">'+opts.map(function(m){var on=typeof cur==='boolean'?cur===!!m[0]:+cur===+m[0];
+  return'<button data-a="set" data-k="'+key+'" data-v="'+m[0]+'" aria-pressed="'+on+'">'+esc(m[1])+'</button>'}).join('')+'</div>'+(hint?'<span class="muted small">'+esc(hint)+'</span>':'')+'</div>'}
 function vMore(){
  var skins=[['ai','藍 Indigo',265,1],['matcha','抹茶 Matcha',148,1],['sakura','桜 Sakura',355,1],['kaki','柿 Kaki',62,1],['sumi','墨 Tusche',265,0]];
  var io=ui.io||{},u=ui.upd||{};
@@ -1119,7 +1130,14 @@ function vMore(){
  '<section class="card stack"><h2>Darstellung</h2>'+
   '<div class="stack-s"><span class="eyebrow">Modus</span><div class="seg">'+[['auto','System'],['light','Hell'],['dark','Dunkel']].map(function(m){return'<button data-a="set" data-k="mode" data-v="'+m[0]+'" aria-pressed="'+(S.set.mode===m[0])+'">'+m[1]+'</button>'}).join('')+'</div></div>'+
   '<div class="stack-s"><span class="eyebrow">Farbe</span><div class="swatches">'+skins.map(function(s){return'<button class="sw" data-a="set" data-k="skin" data-v="'+s[0]+'" aria-pressed="'+(S.set.skin===s[0])+'" title="'+s[1]+'" aria-label="'+s[1]+'" style="background:oklch(55% '+(0.14*s[3])+' '+s[2]+')"></button>'}).join('')+'</div></div></section>'+
- '<section class="card stack"><h2>Repetition</h2>'+
+ '<section class="card stack"><h2>Inhalte</h2>'+
+  segRow('Kansai-Dialekt','kansai',[[1,'Zeigen'],[0,'Ausblenden']],'Betrifft «Ōkini», den Dialog am Marktstand und den Hinweis zum Dialekt.')+
+  segRow('Lese-Annäherung «≈»','laut',[[1,'Zeigen'],[0,'Ausblenden']],'Die deutsche Lesehilfe unter jedem Eintrag, z. B. «≈ konnitschiwa».')+
+  segRow('Kultur-Hinweise 豆知識','cultn',[[1,'Am Ende einer Runde'],[0,'Aus']],'In den Paketen bleiben sie sichtbar.')+
+  segRow('Zeichnen','draw',[[1,'Ein'],[0,'Aus']],'Nachfahren in der Lektion und «Kärtchen: schreiben».')+'</section>'+
+ '<section class="card stack"><h2>Lernen</h2>'+
+  segRow('Neue Karten pro Portion','newn',[[3,'3'],[5,'5'],[10,'10']])+
+  segRow('Karten pro Repetitionsrunde','round',[[10,'10'],[20,'20'],[40,'40']])+
   '<div class="stack-s"><span class="eyebrow">Kana auf der Karte</span><div class="seg">'+[['reveal','Erst bei der Lösung'],['always','Immer'],['never','Nie']].map(function(m){return'<button data-a="set" data-k="kana" data-v="'+m[0]+'" aria-pressed="'+(S.set.kana===m[0])+'">'+m[1]+'</button>'}).join('')+'</div></div>'+
   '<div class="stack-s"><span class="eyebrow">Sprechtempo</span><div class="seg">'+[[0.7,'Langsam'],[0.85,'Ruhig'],[1,'Normal']].map(function(m){return'<button data-a="set" data-k="rate" data-v="'+m[0]+'" aria-pressed="'+(+S.set.rate===m[0])+'">'+m[1]+'</button>'}).join('')+'</div></div>'+
   '<div class="stack-s"><span class="eyebrow">Ton bei der Lösung</span><div class="seg">'+[[1,'Automatisch'],[0,'Nur auf Tippen']].map(function(m){return'<button data-a="set" data-k="auto" data-v="'+m[0]+'" aria-pressed="'+(!!S.set.auto===!!m[0])+'">'+m[1]+'</button>'}).join('')+'</div></div></section>'+
@@ -1205,7 +1223,7 @@ function initTrace(){Array.prototype.forEach.call(document.querySelectorAll('can
  var end=function(){on=false};cv.addEventListener('pointerup',end);cv.addEventListener('pointercancel',end)})}
 function vLearn(st){var it=itemById(st.ids[st.i]),n=st.ids.length;
  return'<div class="stage">'+stageHead('Neue Karten','Kennenlernen: '+(st.i+1)+' von '+n,(st.i+1)/(n+1))+
- '<div class="flash"><span class="pill">Neu</span><div class="q" style="color:var(--accent)">'+esc(it.r)+'</div><div class="laut">≈ '+esc(laut(it.r))+'</div><div class="kana">'+esc(it.k)+'</div><div><b>'+esc(it.d)+'</b></div>'+(it.n?'<div class="muted small">'+esc(it.n)+'</div>':'')+spk(it.k)+'</div>'+
+ '<div class="flash"><span class="pill">Neu</span><div class="q" style="color:var(--accent)">'+esc(it.r)+'</div>'+lautLine(it.r)+'<div class="kana">'+esc(it.k)+'</div><div><b>'+esc(it.d)+'</b></div>'+(it.n?'<div class="muted small">'+esc(it.n)+'</div>':'')+spk(it.k)+'</div>'+
  sentHtml(it)+
  '<p class="muted small">Hör zu und sprich es zweimal laut nach. Danach fragt dich die App gleich ab, das festigt am stärksten.</p>'+
  '<div class="row"><button class="btn" data-a="learnprev"'+(st.i?'':' disabled')+'>Zurück</button><button class="btn pri grow" data-a="learnnext">'+(st.i<n-1?'Weiter':'Jetzt abrufen')+'</button></div></div>'}
@@ -1229,8 +1247,8 @@ function vLesson(st){var both=st.script==='b',chars=rowChars(st.row,st.script),c
  '<div class="flash">'+(both?'<div class="row" style="justify-content:center;flex-wrap:nowrap"><div class="sq big pb"><span>'+h+'</span></div><div class="sq big pb kk"><span>'+k+'</span></div></div>':'<div class="sq big"><span>'+ch+'</span></div>')+
  '<div class="romaji">'+romajiOf(ch)+'</div>'+spk(h)+'</div>'+
  kanaBody(ch,both,true)+
- (st.trace?'<div class="row" style="justify-content:center">'+(both?traceBox(h,true)+traceBox(k,true):traceBox(ch,true))+'</div>':'')+
- '<div class="row"><button class="btn" data-a="ltrace">'+(st.trace?'Nachfahren schliessen':'✍️ Mit dem Finger nachfahren')+'</button>'+(st.trace?'<button class="btn ghost" data-a="render">Löschen</button>':'')+'</div>'+
+ (S.set.draw&&st.trace?'<div class="row" style="justify-content:center">'+(both?traceBox(h,true)+traceBox(k,true):traceBox(ch,true))+'</div>':'')+
+ (S.set.draw?'<div class="row"><button class="btn" data-a="ltrace">'+(st.trace?'Nachfahren schliessen':'✍️ Mit dem Finger nachfahren')+'</button>'+(st.trace?'<button class="btn ghost" data-a="render">Löschen</button>':'')+'</div>':'')+
  '<p class="muted small">'+(both?'Sprich den Laut laut und zeig zuerst auf Hiragana, dann auf Katakana.':'Sprich den Laut dreimal laut.')+' Schreiben mit der Hand verankert die Form besser als Anschauen.</p>'+
  '<div class="row"><button class="btn" data-a="lprev"'+(st.i?'':' disabled')+'>Zurück</button><button class="btn pri grow" data-a="lnext">'+(st.i<chars.length-1?'Weiter':'Zum Kurztest')+'</button></div></div>'}
 function makeQ(st){var pool=st.pool,w=pool.map(function(c){var k=S.kana[c];return(k?1/(1+k.s):1.5)*(st.focus.indexOf(c)>=0?2.5:1)*(st.q&&st.q.c===c?0.05:1)});
@@ -1266,7 +1284,7 @@ function vReview(st){
   '<div class="seg" role="group" aria-label="Richtung">'+dirs.map(function(d){return'<button data-a="set" data-k="dir" data-v="'+d[0]+'" aria-pressed="'+(S.set.dir===d[0])+'">'+d[1]+'</button>'}).join('')+'</div>';
  if(!st.q.length){st.note=st.note||pickNote();var left=dueItems().length,nw=newItems().length;
   return'<div class="stage">'+head+'<div class="flash"><span class="hanko" style="width:54px;height:54px;font-size:30px">済</span><h2>'+(left?'Runde geschafft':'Für heute erledigt')+'</h2><p class="muted">'+st.done+' Karten.'+(left?' Noch '+left+' fällig.':' Morgen kommen die nächsten.')+'</p></div>'+
-  '<div class="row">'+(left?'<button class="btn pri grow" data-a="review">Weitere '+Math.min(left,20)+' repetieren</button>':nw?'<button class="btn pri grow" data-a="learn">'+Math.min(5,nw)+' neue lernen</button>':'')+'<button class="btn grow" data-a="closestage">Schliessen</button></div>'+noteCard(st.note,true)+'</div>'}
+  '<div class="row">'+(left?'<button class="btn pri grow" data-a="review">Weitere '+Math.min(left,nRound())+' repetieren</button>':nw?'<button class="btn pri grow" data-a="learn">'+Math.min(nNew(),nw)+' neue lernen</button>':'')+'<button class="btn grow" data-a="closestage">Schliessen</button></div>'+noteCard(st.note,true)+'</div>'}
  var it=itemById(st.q[0]);if(!it){st.q.shift();return vReview(st)}
  var dir=S.set.dir,isNew=false,front='',showK=S.set.kana;
  if(dir==='de')front='<p class="eyebrow">Sag es auf Japanisch</p><div class="q">'+esc(it.d)+'</div>';
@@ -1275,7 +1293,7 @@ function vReview(st){
  var back='';
  if(st.shown){back='<hr style="width:60%;border:0;border-top:1px dashed var(--line)">'+
   (dir==='de'||dir==='kana'?'<div class="q" style="color:var(--accent)">'+esc(it.r)+'</div>':'')+
-  '<div class="laut">≈ '+esc(laut(it.r))+'</div>'+
+  ''+lautLine(it.r)+''+
   (showK!=='never'&&dir!=='kana'?'<div class="kana">'+esc(it.k)+'</div>':'')+
   (dir!=='de'?'<div><b>'+esc(it.d)+'</b></div>':'')+
   (it.n?'<div class="muted small">'+esc(it.n)+'</div>':'')+(dir!=='ja'?spk(it.k):'')+sentHtml(it)}
@@ -1298,11 +1316,11 @@ function startLesson(script,rowId){var row=rowId?ROWS.filter(function(r){return 
  if(!row){for(var i=0;i<ROWS.length;i++)if(!rowDone(ROWS[i],script)){row=ROWS[i];break}}
  if(!row)row=ROWS[0];ui.script=script;S.set.kscript=script;save();ui.stage={t:'lesson',script:script,row:row,i:0};go()}
 function startQuiz(pool,focus,total,cross){if(!pool.length)return;var st={t:'quiz',pool:pool,focus:focus||[],n:0,total:total||10,ok:0,miss:[],q:null,cross:!!cross};st.q=makeQ(st);ui.stage=st;go()}
-function startReview(ids){var q=ids||shuffle(dueItems().map(function(i){return i.id})).slice(0,20);if(!q.length)return;
+function startReview(ids){var q=ids||shuffle(dueItems().map(function(i){return i.id})).slice(0,nRound());if(!q.length)return;
  ui.stage={t:'review',q:q,done:0,shown:false,peek:false};go();if(S.set.dir==='ja'&&S.set.auto){var it=itemById(q[0]);if(it)speak(it.k)}}
 function startLearn(pid){var p=pid&&packById(pid),src=p?p.items.filter(function(i){return!S.cards[i.id]}):newItems();
  if(p&&S.active.indexOf(p.id)<0){S.active.push(p.id);S.ta=Date.now();save()}
- var ids=src.slice(0,5).map(function(i){return i.id});if(!ids.length)return;
+ var ids=src.slice(0,nNew()).map(function(i){return i.id});if(!ids.length)return;
  ui.stage={t:'learn',ids:ids,i:0};go();if(S.set.auto){var it=itemById(ids[0]);if(it)speak(it.k)}}
 function learnedPool(sc){var pool=[];(sc==='b'?['h','k']:[sc]).forEach(function(s){ROWS.forEach(function(r){if(S.learned[s].indexOf(r[0])>=0)pool=pool.concat(rowChars(r,s))})});return pool}
 function curScript(){return ui.tab==='kana'?ui.script:(S.set.kscript==='b'?'b':(S.learned.k.length&&S.learned.h.length>=10?'k':'h'))}
@@ -1422,7 +1440,7 @@ var ACT={
    if(c==='not_granted')X.sample=null;render()}).catch(function(e){ui.gen={topic:topic,err:e.message};render()})},
  copyprompt:function(){var topic=$('topic').value.trim();if(!topic){toast('Zuerst die Situation beschreiben');return}copy(promptFor(topic),'Auftrag kopiert. Im Claude-Chat einfügen.')},
  'import':function(){try{addPack(parseLoose($('imp').value),'');go();toast('Paket übernommen und aktiviert')}catch(e){ui.gen={topic:$('topic').value,err:e.message};render()}},
- set:function(d){var v=d.v;if(d.k==='rate')v=+v;if(d.k==='auto'||d.k==='tipk')v=v==='1';S.set[d.k]=v;save();
+ set:function(d){var v=d.v;if(d.k==='rate'||d.k==='newn'||d.k==='round')v=+v;if(['auto','tipk','kansai','draw','laut','cultn'].indexOf(d.k)>=0)v=v==='1';if(d.k==='kansai'&&ui.open&&!packById(ui.open))ui.open=null;S.set[d.k]=v;save();
   if(d.k==='dir'&&ui.stage){ui.stage.shown=false;ui.stage.peek=false}applyTheme();render()},
  'export':function(){ui.io={show:true,mode:'out',text:JSON.stringify(S)};render()},
  copybk:function(){copy(JSON.stringify(S),'Sicherung kopiert')},
