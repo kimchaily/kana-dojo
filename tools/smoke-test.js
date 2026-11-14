@@ -99,6 +99,15 @@ const ok = (cond, msg) => { console.log((cond ? '  ok   ' : '  FAIL ') + msg); i
   ok(await p.evaluate(() => { const l = window.__kd._test.state().log; const e = Object.values(l)[0]; return e && e.w >= 5 && e.r >= 5 && e.k > 0; }), 'Tagesprotokoll zählt Wörter, Wiederholungen und Kana');
   if (await p.locator('[data-a="weak"]').count()) { await p.click('[data-a="weak"]'); ok((await p.textContent('.stage h3')).includes('Schwächste Kana'), 'schwächste Kana lassen sich üben'); await p.click('[data-a="closestage"]'); }
 
+  // 5d. Grammatik-Hinweise an Sätzen.
+  ok(await p.evaluate(() => { const P = window.__kd._test.particles, g = r => P(r).map(x => x[0]).join(); return g('Eigo no menyū wa arimasu ka?') === 'no,wa,ka' && g('Kore o onegaishimasu') === 'o' && g('Konnichiwa') === '' && g('Sō desu ka') === 'ka'; }), 'Partikeln werden in Sätzen erkannt');
+  await tab('words'); await p.click('[data-a="open"][data-p="rest"]');
+  ok((await p.locator('.gram').count()) > 3, 'Pakete zeigen Grammatik-Hinweise an Sätzen');
+  await tab('more'); await p.click('[data-a="set"][data-k="gram"][data-v="0"]');
+  await tab('words'); await p.click('[data-a="open"][data-p="rest"]');
+  ok((await p.locator('.gram').count()) === 0, 'Einstellung Grammatik aus blendet die Hinweise aus');
+  await tab('more'); await p.click('[data-a="set"][data-k="gram"][data-v="1"]');
+
   // 6. Hör-Dialog: alle vier Schritte.
   await tab('words');
   await p.click('[data-a="dlgopen"][data-d="d-weg"]');
