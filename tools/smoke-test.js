@@ -108,6 +108,17 @@ const ok = (cond, msg) => { console.log((cond ? '  ok   ' : '  FAIL ') + msg); i
   ok((await p.locator('.gram').count()) === 0, 'Einstellung Grammatik aus blendet die Hinweise aus');
   await tab('more'); await p.click('[data-a="set"][data-k="gram"][data-v="1"]');
 
+  // 5e. Suche: Rōmaji ohne Makron, Kana, Bedeutung, Kana-Zeichen, Dialoge.
+  const sr = await p.evaluate(() => { const S = window.__kd._test.searchAll, top = q => { const r = S(q); return r.words[0] ? r.words[0].it.r : ''; };
+    return [top('arigato'), top('ありがとう'), top('トイレ'), top('Wasser'), S('shi').kana.join(), S('し').kana.join(), S('Umeda').lines.length > 0, S('xyzq').n]; });
+  ok(sr[0] === 'Arigatō gozaimasu' && sr[1] === 'Arigatō gozaimasu' && sr[2] === 'Toire wa doko desu ka?' || sr[2] === 'toire', 'Suche findet Rōmaji ohne Makron und Kana ' + sr.slice(0, 3).join(' | '));
+  ok(/mizu/i.test(sr[3]) && sr[4] === 'し' && sr[5] === 'し' && sr[6] && sr[7] === 0, 'Suche findet Bedeutung, Kana-Zeichen und Dialogzeilen ' + sr.slice(3).join(' | '));
+  await tab('words'); await p.fill('#sq', 'kippu');
+  ok((await p.textContent('#sres')).includes('きっぷ'), 'Suchfeld zeigt Treffer beim Tippen');
+  await p.click('#sres [data-a="open"] >> nth=0');
+  ok((await p.textContent('#main')).includes('← Pakete'), 'Treffer öffnet das Paket');
+  await p.click('[data-a="closepack"]'); await p.fill('#sq', '');
+
   // 6. Hör-Dialog: alle vier Schritte.
   await tab('words');
   await p.click('[data-a="dlgopen"][data-d="d-weg"]');
