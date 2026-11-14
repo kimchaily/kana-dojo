@@ -93,6 +93,12 @@ const ok = (cond, msg) => { console.log((cond ? '  ok   ' : '  FAIL ') + msg); i
   ok(await p.evaluate(() => Object.values(window.__kd._test.state().kana).some(k => k.d > Date.now() + 36e5)), 'gewusstes Kana wird später wieder fällig');
   await p.click('[data-a="closestage"]');
 
+  // 5c. Fortschritt: Protokoll, Diagramme, schwächste Kana.
+  await tab('home');
+  ok(await p.locator('#prog .bars').count() === 2, 'Fortschritt zeigt Verlauf und Vorschau');
+  ok(await p.evaluate(() => { const l = window.__kd._test.state().log; const e = Object.values(l)[0]; return e && e.w >= 5 && e.r >= 5 && e.k > 0; }), 'Tagesprotokoll zählt Wörter, Wiederholungen und Kana');
+  if (await p.locator('[data-a="weak"]').count()) { await p.click('[data-a="weak"]'); ok((await p.textContent('.stage h3')).includes('Schwächste Kana'), 'schwächste Kana lassen sich üben'); await p.click('[data-a="closestage"]'); }
+
   // 6. Hör-Dialog: alle vier Schritte.
   await tab('words');
   await p.click('[data-a="dlgopen"][data-d="d-weg"]');
