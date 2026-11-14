@@ -80,6 +80,7 @@ Der Backlog sind die [GitHub-Issues](https://github.com/kimchaily/kana-dojo/issu
 - **Abrufen:** Repetition in drei Richtungen, Kana-Kärtchen zum Lesen und zum Schreiben aus dem Kopf.
 - **Verteilt wiederholen:** Wörter und Kana haben je einen Zeitplan (1, 3, 7, 16, 35 Tage). Gelernte Kana werden am Tag nach der Lektion fällig, verpasste sofort.
 - **Unterscheiden:** Ähnliche Zeichen stehen nebeneinander, mit einem Merkmal pro Gruppe und einer eigenen Übung.
+- **Suchen:** Im Tab «Wörter» (oder 🔍 auf «Heute») über alle Pakete, Beispielsätze und Dialoge: Rōmaji (auch ohne Makron), Kana oder Kanji, Bedeutung. Einzelne Kana zeigen das Zeichen mit Eselsbrücke. Mit 🎤 per Spracheingabe auf Japanisch oder in der Oberflächensprache (Chrome).
 - **Hören und Sprechen:** Dialoge in vier Schritten, dazu ein Briefing für den Sprachmodus einer KI.
 
 ## Synchronisation (Beta)
