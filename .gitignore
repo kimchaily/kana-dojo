@@ -8,3 +8,4 @@ local.properties
 *.iml
 site/
 node_modules/
+text-check/
