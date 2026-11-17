@@ -20,8 +20,17 @@ const CACHE = process.env.DEEPL_CACHE || path.join(OUT, 'deepl-cache.json');
 
 const STOP = new Set(('a an the to of is are be it this that i you we he she they my your in on at for with and or not no yes do does please '
   + 'der die das ein eine einen ist sind ich du sie wir es mit und oder nicht bitte zu im in am an auf für von den dem des mir mich dir').split(' '));
-const words = t => String(t || '').toLowerCase().replace(/[’']/g, '').replace(/\([^)]*\)/g, ' ').split(/[^a-zäöüß0-9]+/).filter(w => w.length > 1 && !STOP.has(w));
-const stem = w => w.replace(/(ing|ed|es|s|en|e|n)$/, '');
+// Zahlwörter und unregelmässige Formen vereinheitlichen, damit «1» = «one» und «Men» = «man».
+const NUM = { one: '1', two: '2', three: '3', four: '4', five: '5', six: '6', seven: '7', eight: '8', nine: '9', ten: '10', hundred: '100', thousand: '1000',
+  eins: '1', zwei: '2', drei: '3', vier: '4', fünf: '5', sechs: '6', sieben: '7', acht: '8', neun: '9', zehn: '10', hundert: '100', tausend: '1000' };
+const IRREG = { men: 'man', women: 'woman', children: 'child', people: 'person' };
+const words = t => {
+  const all = String(t || '').toLowerCase().replace(/[’']/g, '').replace(/\([^)]*\)/g, ' ').replace(/(\d)[,' ](\d)/g, '$1$2').replace(/ten thousand/g, '10000')
+    .split(/[^a-zäöüß0-9]+/).filter(Boolean).map(w => NUM[w] || IRREG[w] || w);
+  const content = all.filter(w => (w.length > 1 || /\d/.test(w)) && !STOP.has(w));
+  return content.length ? content : all; // «Please», «Yes», «No» bestehen nur aus Füllwörtern
+};
+const stem = w => /^\d+$/.test(w) ? w : w.replace(/(ly|ing|ed|es|s|en|e|n)$/, '');
 function overlap(a, b) { const B = new Set(words(b).map(stem)); return words(a).map(stem).some(w => B.has(w) || [...B].some(x => x.length > 3 && w.length > 3 && (x.startsWith(w) || w.startsWith(x)))); }
 
 // Kombinationen mit kleinen Vokalen, vor allem in Lehnwörtern (カフェ = kafe).
@@ -104,8 +113,15 @@ async function deepl(texts, target, cache) {
   if (jm) for (const r of res.filter(isWord)) {
     jmChecked++;
     const k = r.k.trim().replace(/[？?！!]$/, '');
-    const hits = hasKanji(k) ? jm.byKanji.get(k) || [] : jm.byKana.get(toHira(k)) || [];
-    if (!hits.length) { flag(r, 1, 'Nicht im Wörterbuch (JMdict). Schreibung prüfen.'); continue; }
+    let hits = hasKanji(k) ? jm.byKanji.get(k) || [] : jm.byKana.get(toHira(k)) || [];
+    // Höflichkeits-Präfix お/ご (おはし → はし) nachschlagen
+    if (!hits.length && /^[おご]/.test(k) && !hasKanji(k)) hits = jm.byKana.get(toHira(k.slice(1))) || [];
+    if (!hits.length) {
+      // Konjugierte Formen (わかりません) stehen im Wörterbuch nur als Grundform
+      if (/(ます|ません|ました|ませんでした|ましょう|です|でした)$/.test(k)) r.info.push('Verbform, nicht im Wörterbuch nachgeschlagen');
+      else flag(r, 1, 'Nicht im Wörterbuch (JMdict). Schreibung prüfen.');
+      continue;
+    }
     if (hasKanji(k)) {
       const kanaReadings = hits.flatMap(e => e.kana);
       const want = flat(r.r);
