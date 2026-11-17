@@ -119,6 +119,20 @@ const ok = (cond, msg) => { console.log((cond ? '  ok   ' : '  FAIL ') + msg); i
   ok((await p.textContent('#main')).includes('← Pakete'), 'Treffer öffnet das Paket');
   await p.click('[data-a="closepack"]'); await p.fill('#sq', '');
 
+  // 5f. Texte prüfen (#18): Export, Melden, Einstellungen.
+  const tr = await p.evaluate(() => { const T = window.__kd._test, rows = T.textRows(), csv = T.exportCsv(rows), txt = T.exportText(rows);
+    return [rows.length, rows.every(r => r.id && r.k && r.de && r.en), new Set(rows.map(r => r.id)).size === rows.length, csv.split('\r\n').length === rows.length + 1, txt.includes('[basis:0]')]; });
+  ok(tr[0] > 300 && tr[1] && tr[2] && tr[3] && tr[4], 'Export: alle Texte mit Kana, Deutsch und Englisch, eindeutige IDs (' + tr[0] + ')');
+  await tab('words'); await p.click('[data-a="open"][data-p="rest"]');
+  await p.click('[data-a="rep"][data-id="rest:0"]');
+  ok((await p.inputValue('#cr-t')).includes('Futari desu') && (await p.inputValue('#cr-b')).includes('ID: rest:0'), '📝 öffnet die Meldung vorausgefüllt');
+  await p.fill('#cr-t', ''); await p.fill('#cr-b', '');
+  await p.click('[data-a="set"][data-k="rept"][data-v="0"]');
+  await tab('words'); await p.click('[data-a="open"][data-p="rest"]');
+  ok(await p.locator('[data-a="rep"]').count() === 0, 'Einstellung «Texte melden» aus blendet 📝 aus');
+  await tab('more'); await p.click('[data-a="set"][data-k="rept"][data-v="1"]');
+  ok(await p.locator('#exp [data-a="expcsv"]').count() === 1, 'Export-Abschnitt unter «Mehr»');
+
   // 6. Hör-Dialog: alle vier Schritte.
   await tab('words');
   await p.click('[data-a="dlgopen"][data-d="d-weg"]');

@@ -95,6 +95,14 @@ Die App läuft auf Deutsch oder Englisch (*Mehr → Darstellung → Sprache · L
 - **Oberfläche:** Die App rendert Deutsch. Im englischen Modus ersetzt `trDom` die sichtbaren Texte über das Wörterbuch `UI_EN` und die Muster `UI_RX`. Neue deutsche Texte dort ergänzen. Der Rauchtest meldet deutsche Reste im englischen Modus.
 - **Eigene Pakete und Wörter** behalten die Sprache, in der sie angelegt wurden.
 
+## Texte prüfen
+
+Die japanischen Texte stammen von Claude und werden schrittweise von einer Muttersprachlerin geprüft (#18).
+
+- **Melden:** 📝 an jedem eingebauten Text öffnet «Wunsch oder Fehler melden» vorausgefüllt (abschaltbar unter *Mehr → Inhalte*).
+- **Export:** *Mehr → Texte prüfen lassen* kopiert alle oder nur ungeprüfte Texte als Text oder lädt sie als CSV (Japanisch, Deutsch, Englisch, Spalte für Korrekturen).
+- **Geprüft:** Bestätigte Einträge stehen in `CHECKED` in `web/app.html` (ID → Datum) und tragen in der App «✔︎ geprüft» (abschaltbar).
+
 ## Inhalte ändern
 
 Kana, Eselsbrücken, ähnliche Zeichen, Dialoge, Beispielsätze und Startpakete stehen als Daten oben im Skript von `web/app.html` (`MH`, `MK`, `SIM`, `DLG`, `SENT`, `BUILTIN`). Nach einer Änderung genügt ein Push.
