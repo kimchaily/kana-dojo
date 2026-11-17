@@ -133,7 +133,7 @@ async function deepl(texts, target, cache) {
       deeplNote = `DeepL: ${res.length} Texte, ${sent} neu übersetzt (Rest aus dem Zwischenspeicher).`;
     } catch (e) { deeplNote = 'DeepL fehlgeschlagen: ' + e.message; }
     fs.writeFileSync(CACHE, JSON.stringify(cache));
-  }
+  } else if (!fs.existsSync(CACHE)) fs.writeFileSync(CACHE, '{}');
 
   // Bericht
   // Zwei unabhängige Hinweise (z. B. JMdict und DeepL) zusammen gelten als «wahrscheinlich falsch».
@@ -160,5 +160,6 @@ async function deepl(texts, target, cache) {
     .map(a => a.map(csvCell).join(',')).join('\r\n');
   fs.writeFileSync(path.join(OUT, 'report.csv'), csv);
   if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, md.length > 900000 ? md.slice(0, 900000) + '\n\n… gekürzt, ganzer Bericht im Artefakt.' : md);
+  bad.concat(check).forEach(r => console.log(`${r.level === 2 ? '❌' : '⚠️'} ${r.id}  ${r.k} (${r.r}) = ${r.en} | ${r.flags.map(f => f.msg).concat(r.info).join(' · ')}`));
   console.log(`Text-Check: ${res.length} Texte, ${bad.length} falsch, ${check.length} prüfen, ${fine.length} ok. ${deeplNote}`);
 })().catch(e => { console.error(e); process.exit(1); });
