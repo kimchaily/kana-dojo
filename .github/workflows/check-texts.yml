@@ -1,0 +1,70 @@
+name: Text-Check
+
+# Vorfilter für die Prüfung der japanischen Texte (#18):
+# Schreibung (Rōmaji ↔ Kana), Wörterbuch (JMdict) und Rückübersetzung (DeepL).
+# Der Bericht steht in der Zusammenfassung des Laufs und als Artefakt «text-check».
+#
+# DeepL braucht das Repository-Secret DEEPL_AUTH_KEY. Ohne Secret laufen nur
+# Schreibung und Wörterbuch. Übersetzungen werden zwischengespeichert, damit
+# unveränderte Texte kein Kontingent verbrauchen.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [web/app.html]
+  pull_request:
+    paths: [tools/check-texts.js, .github/workflows/check-texts.yml]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: text-check
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Playwright installieren
+        run: |
+          npm install --no-save playwright@1
+          npx playwright install --with-deps chromium
+
+      - name: Web-App bauen
+        run: bash tools/build-pages.sh check
+
+      - name: JMdict laden (jmdict-simplified, englisch)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p jmdict && cd jmdict
+          gh release download --repo scriptin/jmdict-simplified --pattern 'jmdict-eng-[0-9]*.json.zip'
+          unzip -q -o ./*.zip
+          echo "JMDICT=$(ls "$PWD"/*.json | head -1)" >> "$GITHUB_ENV"
+
+      - name: DeepL-Zwischenspeicher holen
+        uses: actions/cache@v4
+        with:
+          path: text-check/deepl-cache.json
+          key: deepl-cache-${{ github.run_id }}
+          restore-keys: deepl-cache-
+
+      - name: Texte prüfen
+        env:
+          DEEPL_AUTH_KEY: ${{ secrets.DEEPL_AUTH_KEY }}
+          OUT: text-check
+        run: node tools/check-texts.js
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: text-check
+          path: |
+            text-check/report.md
+            text-check/report.csv

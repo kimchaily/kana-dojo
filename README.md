@@ -101,6 +101,7 @@ Die japanischen Texte stammen von Claude und werden schrittweise von einer Mutte
 
 - **Melden:** 📝 an jedem eingebauten Text öffnet «Wunsch oder Fehler melden» vorausgefüllt (abschaltbar unter *Mehr → Inhalte*).
 - **Export:** *Mehr → Texte prüfen lassen* kopiert alle oder nur ungeprüfte Texte als Text oder lädt sie als CSV (Japanisch, Deutsch, Englisch, Spalte für Korrekturen).
+- **Automatischer Vorfilter:** *Actions → Text-Check → Run workflow* prüft alle Texte: Rōmaji ↔ Kana, Einzelwörter gegen JMdict (Lesung, Bedeutung) und eine Rückübersetzung mit DeepL. Der Bericht (❌ wahrscheinlich falsch, ⚠️ prüfen, ✅ unauffällig) steht in der Zusammenfassung des Laufs und als CSV im Artefakt. Läuft auch nach jeder Änderung an `web/app.html` auf `main`. DeepL braucht das Secret `DEEPL_AUTH_KEY` (*Settings → Secrets and variables → Actions*); ohne läuft der Rest. Lokal: `JMDICT=… DEEPL_AUTH_KEY=… node tools/check-texts.js` nach `bash tools/build-pages.sh`.
 - **Geprüft:** Bestätigte Einträge stehen in `CHECKED` in `web/app.html` (ID → Datum) und tragen in der App «✔︎ geprüft» (abschaltbar).
 
 ## Inhalte ändern
