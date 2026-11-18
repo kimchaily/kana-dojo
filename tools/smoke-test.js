@@ -198,6 +198,8 @@ const ok = (cond, msg) => { console.log((cond ? '  ok   ' : '  FAIL ') + msg); i
   await tab('more');
   ok((await p.getAttribute('#other a.btn', 'target')) === '_blank', 'Mehr: Abschnitt «Auch in Claude» mit Link');
 
+  ok((await p.getAttribute('#cr a[href*="claude.ai/code/session_"]', 'target')) === '_blank', 'Mehr: Knopf zum Entwicklungs-Chat');
+
   // 7b. Eigene Wörter gehen nicht verloren.
   const own = () => p.evaluate(() => window.__kd._test.ownCount(window.__kd._test.state().packs));
   const ownBefore = await own();
