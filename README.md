@@ -99,6 +99,8 @@ Der Browser wird gebeten, den Speicher dauerhaft zu halten (`navigator.storage.p
 
 *Mehr → Geräte synchronisieren*: Ein GitHub-Token mit dem Recht `gist` einfügen. Der Lernstand liegt dann als `kanadojo-sync.json` in einem privaten Gist. Beim Zusammenführen gewinnt pro Karte der neuere Stand, gelernte Reihen und Pakete werden vereinigt. Darstellungs-Einstellungen bleiben pro Gerät. Das Token liegt nur auf dem Gerät und steht weder in der Sicherung noch im Gist.
 
+**Repo-Datei (Web-App und Claude-Artefakt gemeinsam):** Statt des Gists kann der Lernstand als `kanadojo-sync.json` in einem privaten Repo liegen. Die Web-App schreibt mit einem fein abgestuften Token (nur dieses Repo, «Contents: Read and write»), das Claude-Artefakt über den GitHub-Connector in Claude (`get_file_contents`, `create_or_update_file`, Fähigkeit `mcp`). Das Artefakt erreicht `api.github.com` nicht direkt, darum geht der Gist dort nicht (Verbindungstest unter *Geräte synchronisieren*). Jeder Abgleich ist ein Commit; die App gleicht deshalb erst 30 Sekunden nach der letzten Änderung ab.
+
 ## Sprachen
 
 Die App läuft auf Deutsch oder Englisch (*Mehr → Darstellung → Sprache · Language*).
