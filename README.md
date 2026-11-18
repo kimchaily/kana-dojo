@@ -14,6 +14,7 @@ Japanisch-Trainer für den Alltag: Hiragana und Katakana mit Eselsbrücken, Wort
 | `web/pwa/` | Manifest, Service Worker und Icons der installierbaren Web-App. |
 | `tools/build-pages.sh` | Baut die Web-App nach `site/`, als Produktion oder als Vorschau. |
 | `tools/pages-portal.py` | Erzeugt die Übersichtsseite der Vorschauen. |
+| `tools/build-artifact.sh` | Baut die Fassung für das Claude-Artefakt nach `artifact/` (Spiegel, siehe `CLAUDE.md`). |
 | `tools/smoke-test.js` | Rauchtest: spielt die wichtigsten Abläufe im Browser durch. |
 | `.github/workflows/test.yml` | Führt den Rauchtest in jedem Pull Request aus. |
 | `docs/AUDIT.md` | Audit zu Lernwirkung, Bedienung und Technik. |

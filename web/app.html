@@ -996,6 +996,7 @@ function initAudio(){
  if(window.claude&&claude.use){
   claude.use('tts').then(function(t){if(t){X.tts=t;render()}}).catch(function(){});
   claude.use('sample').then(function(s){if(s){X.sample=s;render()}}).catch(function(){});
+  claude.use('downloads').then(function(d){if(d)X.dl=d}).catch(function(){});
  }}
 
 /* ---------- Darstellung ---------- */
@@ -1688,6 +1689,7 @@ var ACT={
  expall:function(d){ui.expAll=d.v==='1';render()},
  exptext:function(){copy(exportText(expRows()),'Texte kopiert')},
  expcsv:function(){var csv=exportCsv(expRows()),name='kana-dojo-texte.csv';
+  if(X.dl){X.dl.save({filename:name,data:new Blob([csv],{type:'text/csv;charset=utf-8'})}).then(function(){toast('CSV gespeichert')},function(e){if(e&&e.code==='declined')return;copy(csv,'Download nicht möglich, CSV kopiert')});return}
   try{if(X.android)throw 0;var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},1000);toast('CSV gespeichert')}
   catch(e){copy(csv,'Download nicht möglich, CSV kopiert')}},
  cradd:function(){var t=ui.cr.title.trim(),b=ui.cr.body.trim();if(!t){toast('Bitte kurz beschreiben, worum es geht');return}
