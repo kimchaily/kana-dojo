@@ -51,7 +51,12 @@ const ok = (cond, msg) => { console.log((cond ? '  ok   ' : '  FAIL ') + msg); i
   for (let i = 0; i < 5; i++) await p.click('[data-a="learnnext"]');
   ok((await p.textContent('.stage h3')).includes('Repetition'), 'nach dem Kennenlernen folgt der Abruf');
   ok(Object.keys((await st()).cards).length === 5, 'fünf Karten sind angelegt');
-  for (let i = 0; i < 5; i++) { await p.click('[data-a="show"]'); await p.click('[data-a="grade"][data-g="1"]'); }
+  await p.click('[data-a="show"]'); await p.click('[data-a="grade"][data-g="2"]');
+  const before = await p.evaluate(() => JSON.stringify(window.__kd._test.state().cards));
+  await p.click('[data-a="undograde"]');
+  ok((await p.textContent('.stage')).includes('4 offen') === false && await p.locator('[data-a="grade"]').count() === 3 && JSON.stringify(Object.values((await p.evaluate(() => window.__kd._test.state().cards))).map(c => c.b)) !== JSON.stringify(Object.values(JSON.parse(before)).map(c => c.b)), '↩ nimmt die letzte Bewertung zurück');
+  await p.click('[data-a="grade"][data-g="1"]');
+  for (let i = 0; i < 4; i++) { await p.click('[data-a="show"]'); await p.click('[data-a="grade"][data-g="1"]'); }
   ok((await p.textContent('.stage h2')).includes('erledigt'), 'Repetition endet sauber');
   await p.click('[data-a="closestage"]');
   ok(await p.isDisabled('[data-a="review"]'), 'danach ist heute nichts mehr fällig');
@@ -154,6 +159,10 @@ const ok = (cond, msg) => { console.log((cond ? '  ok   ' : '  FAIL ') + msg); i
   await p.fill('#w-in', '{"items":[{"r":"kasa","k":"かさ","d":"Regenschirm","n":"Eselsbrücke: Die Kasse ist nass.","s":{"r":"Kasa wa arimasu ka?","k":"かさはありますか","d":"Haben Sie einen Schirm?"}}]}');
   await p.click('[data-a="win"]');
   ok((await p.textContent('#main')).includes('Regenschirm') && (await p.textContent('#main')).includes('Kasa wa arimasu ka?'), 'eigenes Wort mit Eselsbrücke und Satz landet in «Meine Wörter»');
+  await p.click('[data-a="delitem"]');
+  ok(!(await p.textContent('#main')).includes('Regenschirm'), 'eigenes Wort gelöscht');
+  await p.click('#toast [data-a="undo"]');
+  ok((await p.textContent('#main')).includes('Regenschirm'), 'Löschen lässt sich rückgängig machen');
 
   // 6c. Einstellungen wirken.
   await tab('more');
