@@ -26,7 +26,7 @@ Aufbau, Build und Deployment stehen im `README.md`.
   1. Artefakt lesen (Artifact-Tool, `action: read`) und die gespeicherte Datei vollständig lesen.
   2. `node tools/artifact-sync.js <gespeicherte Datei>` ausführen und nach `status` handeln:
      - `in-sync`, `dev-ahead`: nichts tun.
-     - `main-ahead`: `bash tools/build-artifact.sh`, `artifact/kana-dojo.html` auf die URL veröffentlichen (Fähigkeiten `{"sample":{},"tts":{},"downloads":true,"db":{},"user":{}}`).
+     - `main-ahead`: `bash tools/build-artifact.sh`, `artifact/kana-dojo.html` auf die URL veröffentlichen (Fähigkeiten `{"sample":{},"tts":{},"downloads":true,"db":{},"user":{},"mcp":{"servers":[{"server":"GitHub","tools":["get_file_contents","create_or_update_file"]}]}}`; `mcp` für den GitHub-Verbindungstest und die geplante Datei-Synchronisation).
      - `artifact-changed` oder `unknown`: Das Artefakt wurde ausserhalb des Repos geändert. `appFile` als `web/app.html` auf einen neuen Branch `claude/artifact-sync-<datum>` übernehmen, `bash tools/build-web.sh`, Rauchtest, PR öffnen. Das Artefakt **nicht** überschreiben; nach dem Merge gilt `main-ahead`.
   3. Merge-Konflikte zwischen beiden Seiten nie automatisch auflösen: PR öffnen und die Person fragen.
 - Der Knopf «Entwicklungs-Chat öffnen» (Mehr → Wunsch oder Fehler melden) zeigt auf `DEV_URL` in `web/app.html`. Wechselt die Entwicklung in eine neue Sitzung, dort die URL anpassen.
