@@ -259,6 +259,22 @@ const ok = (cond, msg) => { console.log((cond ? '  ok   ' : '  FAIL ') + msg); i
   ok((await p.textContent('nav')).includes('Heute'), 'zurück auf Deutsch');
 
   ok(errs.length === 0, 'keine Konsolenfehler im ganzen Durchlauf ' + errs.join(' | '));
+
+  // 9. Im Claude-Artefakt: Verbindungstest für GitHub; klappt der direkte Zugriff, erscheint die Gist-Einrichtung.
+  const actx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  await actx.addInitScript(() => { window.claude = { use: n => Promise.resolve(n === 'mcp' ? { listTools: () => Promise.resolve({ servers: [] }) } : null) }; });
+  let zen = 503;
+  await actx.route('https://api.github.com/zen', r => r.fulfill({ status: zen, body: 'zen' }));
+  const ap = await actx.newPage();
+  ap.on('pageerror', e => errs.push('artefakt: ' + e.message));
+  await ap.goto(page_url); await ap.click('nav button[data-t="more"]');
+  ok(await ap.locator('[data-a="ghtest"]').count() === 1 && await ap.locator('#sync-t').count() === 0, 'Artefakt: Verbindungstest statt Gist-Einrichtung');
+  await ap.click('[data-a="ghtest"]'); await ap.waitForSelector('text=GitHub direkt nicht erreichbar');
+  ok(await ap.locator('text=GitHub-Connector nicht verbunden').count() === 1, 'Artefakt: Test meldet direkten Zugriff und Connector');
+  zen = 200; await ap.click('[data-a="ghtest"]'); await ap.waitForSelector('#sync-t');
+  ok(await ap.locator('text=Gist-Synchronisation möglich').count() === 1, 'Artefakt: direkter Zugriff klappt → Gist-Einrichtung erscheint');
+  await actx.close();
+  ok(errs.length === 0, 'keine Fehler im Artefakt-Test ' + errs.join(' | '));
   await browser.close();
   console.log(failed ? `\n${failed} Prüfung(en) fehlgeschlagen` : '\nAlle Prüfungen bestanden');
   process.exit(failed ? 1 : 0);
