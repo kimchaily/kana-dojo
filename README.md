@@ -84,6 +84,17 @@ Der Backlog sind die [GitHub-Issues](https://github.com/kimchaily/kana-dojo/issu
 - **Suchen:** Im Tab «Wörter» (oder 🔍 auf «Heute») über alle Pakete, Beispielsätze und Dialoge: Rōmaji (auch ohne Makron), Kana oder Kanji, Bedeutung. Einzelne Kana zeigen das Zeichen mit Eselsbrücke. Mit 🎤 per Spracheingabe auf Japanisch oder in der Oberflächensprache (Chrome).
 - **Hören und Sprechen:** Dialoge in vier Schritten, dazu ein Briefing für den Sprachmodus einer KI.
 
+## Eigene Wörter sichern
+
+Eigene Pakete und Wörter sind mehrfach gesichert (*Mehr → Eigene Wörter sichern*):
+
+1. **Zweite Kopie und ältere Stände auf dem Gerät.** Vor jedem Löschen wird der alte Stand gesichert; bis zu 15 Stände lassen sich zurückholen.
+2. **Selbstheilung:** Fehlen beim Start Wörter, ohne dass sie gelöscht wurden (z. B. nach dem Einspielen einer älteren Sicherung), kommen sie aus der Kopie zurück.
+3. **Ausserhalb des Geräts:** im Claude-Artefakt privat im Claude-Konto, in der Web-App über die Gist-Synchronisation. Ohne beides erinnert die App ans Sichern als Datei.
+4. **Export und Import** als JSON-Datei. Import fügt nur hinzu.
+
+Der Browser wird gebeten, den Speicher dauerhaft zu halten (`navigator.storage.persist`).
+
 ## Synchronisation (Beta)
 
 *Mehr → Geräte synchronisieren*: Ein GitHub-Token mit dem Recht `gist` einfügen. Der Lernstand liegt dann als `kanadojo-sync.json` in einem privaten Gist. Beim Zusammenführen gewinnt pro Karte der neuere Stand, gelernte Reihen und Pakete werden vereinigt. Darstellungs-Einstellungen bleiben pro Gerät. Das Token liegt nur auf dem Gerät und steht weder in der Sicherung noch im Gist.
