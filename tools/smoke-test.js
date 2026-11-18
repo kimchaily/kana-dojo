@@ -192,6 +192,12 @@ const ok = (cond, msg) => { console.log((cond ? '  ok   ' : '  FAIL ') + msg); i
   });
   ok(merged.join('|') === '3|2|ka|a|cz', 'Zusammenführen: neuerer Stand gewinnt pro Karte, Gelöschtes bleibt gelöscht');
 
+  // 7a. Wechsel zur anderen Fassung (Web-App → Claude-Artefakt; im Artefakt umgekehrt).
+  await tab('home');
+  ok((await p.getAttribute('header a.ico', 'href')) === 'https://claude.ai/artifact/5DJdjgHBiwiwrCAFCydnFx', 'Heute: Knopf öffnet das Claude-Artefakt');
+  await tab('more');
+  ok((await p.getAttribute('#other a.btn', 'target')) === '_blank', 'Mehr: Abschnitt «Auch in Claude» mit Link');
+
   // 7b. Eigene Wörter gehen nicht verloren.
   const own = () => p.evaluate(() => window.__kd._test.ownCount(window.__kd._test.state().packs));
   const ownBefore = await own();
