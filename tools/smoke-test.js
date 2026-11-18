@@ -192,6 +192,32 @@ const ok = (cond, msg) => { console.log((cond ? '  ok   ' : '  FAIL ') + msg); i
   });
   ok(merged.join('|') === '3|2|ka|a|cz', 'Zusammenführen: neuerer Stand gewinnt pro Karte, Gelöschtes bleibt gelöscht');
 
+  // 7b. Eigene Wörter gehen nicht verloren.
+  const own = () => p.evaluate(() => window.__kd._test.ownCount(window.__kd._test.state().packs));
+  const ownBefore = await own();
+  ok(ownBefore >= 1, 'es gibt eigene Wörter (' + ownBefore + ')');
+  // a) Hauptspeicher kaputt oder leer: beim Start aus der zweiten Kopie zurückholen
+  await p.evaluate(() => { const s = JSON.parse(localStorage.getItem('kanadojo.v1')); s.packs = []; localStorage.setItem('kanadojo.v1', JSON.stringify(s)); });
+  await p.reload();
+  ok(await own() === ownBefore, 'leerer Hauptspeicher: eigene Wörter beim Start zurückgeholt');
+  // b) Sicherung ohne eigene Wörter einspielen: eigene Wörter bleiben
+  await tab('more'); await p.click('[data-a="restore"]');
+  await p.fill('#bk', JSON.stringify({ v: 1, cards: {}, packs: [] })); await p.click('[data-a="dorestore"]');
+  ok(await own() === ownBefore, 'ältere Sicherung einspielen: eigene Wörter bleiben');
+  // c) Bewusst löschen bleibt gelöscht, lässt sich aber aus älteren Ständen zurückholen
+  await tab('words'); await p.click('[data-a="open"][data-p="mine"]');
+  await p.click('[data-a="delitem"]'); await p.reload();
+  ok(await own() === ownBefore - 1, 'bewusst gelöschtes Wort bleibt gelöscht');
+  await tab('more'); await p.evaluate(() => document.querySelectorAll('#vocab details').forEach(d => d.open = true));
+  await p.click('[data-a="vsnap"] >> nth=0');
+  ok(await own() === ownBefore, 'aus älterem Stand zurückgeholt');
+  // d) Export und Import (Import fügt nur hinzu)
+  await p.evaluate(() => document.querySelector('#vocab details').open = true);
+  await p.fill('#v-in', JSON.stringify({ kind: 'kana-dojo-vocab', packs: [{ id: 'mine', title: 'Meine Wörter', items: [{ id: 'imp1', r: 'tsukue', k: 'つくえ', d: 'Tisch', n: '' }] }] }));
+  await p.click('[data-a="vimport"]');
+  ok(await own() === ownBefore + 1, 'Import fügt hinzu, ohne Bestehendes zu löschen');
+  ok(await p.locator('#rel .rel').count() >= 4, 'Versionshinweise unter «Mehr»');
+
   // 8. Englisch: Daten vollständig, keine deutschen Reste auf den Hauptseiten.
   const enData = await p.evaluate(() => {
     const T = window.__kd._test, E = T.EN_DATA, D = T.DE, bad = [];
