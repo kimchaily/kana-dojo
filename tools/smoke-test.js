@@ -260,20 +260,56 @@ const ok = (cond, msg) => { console.log((cond ? '  ok   ' : '  FAIL ') + msg); i
 
   ok(errs.length === 0, 'keine Konsolenfehler im ganzen Durchlauf ' + errs.join(' | '));
 
-  // 9. Im Claude-Artefakt: Verbindungstest für GitHub; klappt der direkte Zugriff, erscheint die Gist-Einrichtung.
+  // 9. Im Claude-Artefakt: Repo-Datei über den GitHub-Connector (simuliert) und Verbindungstest.
   const actx = await browser.newContext({ viewport: { width: 390, height: 844 } });
-  await actx.addInitScript(() => { window.claude = { use: n => Promise.resolve(n === 'mcp' ? { listTools: () => Promise.resolve({ servers: [] }) } : null) }; });
-  let zen = 503;
-  await actx.route('https://api.github.com/zen', r => r.fulfill({ status: zen, body: 'zen' }));
+  await actx.addInitScript(() => {
+    const hex = () => Array.from({ length: 40 }, () => '0123456789abcdef'[Math.floor(Math.random() * 16)]).join('');
+    const F = window.__ghFile = { text: null, sha: '', calls: [] };
+    const mcp = { listTools: () => Promise.resolve({ servers: [{ server: 'GitHub', authStatus: 'unknown', tools: [{ name: 'get_file_contents' }, { name: 'create_or_update_file' }] }] }),
+      callTool: (srv, tool, a) => { F.calls.push(tool + ':' + a.owner + '/' + a.repo + '/' + a.path);
+        if (tool === 'get_file_contents') return F.text == null ? Promise.reject({ code: 'tool_error', message: 'failed to get file: 404 Not Found' })
+          : Promise.resolve({ content: [{ type: 'text', text: 'successfully downloaded text file (SHA: ' + F.sha + ')' }, { type: 'resource', resource: { uri: 'repo://x', text: F.text } }] });
+        if (tool === 'create_or_update_file') { if ((F.text != null) && a.sha !== F.sha) return Promise.reject({ code: 'tool_error', message: '409 sha mismatch' });
+          F.text = a.content; F.sha = hex(); return Promise.resolve({ content: [{ type: 'text', text: 'ok' }] }); }
+        return Promise.reject({ code: 'not_in_manifest' }); } };
+    window.claude = { use: n => Promise.resolve(n === 'mcp' ? mcp : null) };
+  });
+  await actx.route('https://api.github.com/**', r => r.abort());
   const ap = await actx.newPage();
   ap.on('pageerror', e => errs.push('artefakt: ' + e.message));
   await ap.goto(page_url); await ap.click('nav button[data-t="more"]');
-  ok(await ap.locator('[data-a="ghtest"]').count() === 1 && await ap.locator('#sync-t').count() === 0, 'Artefakt: Verbindungstest statt Gist-Einrichtung');
+  ok(await ap.locator('#sync-r').count() === 1 && await ap.locator('#sync-t').count() === 0, 'Artefakt: Repo-Datei über Connector, ohne Token');
+  await ap.fill('#sync-r', 'https://github.com/me/kd-daten'); await ap.click('[data-a="syncon"]');
+  await ap.waitForSelector('text=Zuletzt synchronisiert');
+  const f1 = await ap.evaluate(() => ({ t: window.__ghFile.text, c: window.__ghFile.calls.join() }));
+  const j1 = JSON.parse(f1.t || '{}');
+  ok(j1.v === 1 && f1.c.includes('create_or_update_file:me/kd-daten/kanadojo-sync.json'), 'Artefakt: Lernstand als Datei ins Repo geschrieben');
+  await ap.evaluate(() => { const F = window.__ghFile, d = JSON.parse(F.text); d.cards['zz:remote'] = { b: 2, d: 1, t: Date.now() + 1000 }; F.text = JSON.stringify(d); F.sha = 'f'.repeat(40); });
+  await ap.click('[data-a="syncnow"]'); await ap.waitForFunction(() => window.__kd._test.state().cards['zz:remote']);
+  ok(await ap.evaluate(() => JSON.parse(window.__ghFile.text).cards['zz:remote'].b === 2), 'Artefakt: Änderung aus der Datei übernommen und zurückgeschrieben');
+  await ap.evaluate(() => document.querySelectorAll('details').forEach(d => d.open = true));
   await ap.click('[data-a="ghtest"]'); await ap.waitForSelector('text=GitHub direkt nicht erreichbar');
-  ok(await ap.locator('text=GitHub-Connector nicht verbunden').count() === 1, 'Artefakt: Test meldet direkten Zugriff und Connector');
-  zen = 200; await ap.click('[data-a="ghtest"]'); await ap.waitForSelector('#sync-t');
-  ok(await ap.locator('text=Gist-Synchronisation möglich').count() === 1, 'Artefakt: direkter Zugriff klappt → Gist-Einrichtung erscheint');
+  ok(await ap.locator('text=GitHub-Connector erreichbar').count() === 1, 'Artefakt: Verbindungstest meldet Connector');
   await actx.close();
+
+  // 10. Web-App: Repo-Datei über Token (GitHub-API simuliert), gleiche Datei wie im Artefakt.
+  const wctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const W = { content: null, sha: '', puts: 0, auth: '' };
+  await wctx.route('https://api.github.com/repos/me/kd-daten/contents/kanadojo-sync.json', async r => {
+    W.auth = r.request().headers()['authorization'] || '';
+    if (r.request().method() === 'GET') return W.content == null ? r.fulfill({ status: 404, body: '{}' }) : r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ sha: W.sha, content: W.content }) });
+    const b = JSON.parse(r.request().postData()); W.content = b.content; W.sha = 'a' + W.puts; W.puts++;
+    return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ content: { sha: W.sha } }) });
+  });
+  const wp = await wctx.newPage();
+  wp.on('pageerror', e => errs.push('repo: ' + e.message));
+  await wp.goto(page_url); await wp.click('nav button[data-t="more"]');
+  await wp.click('[data-a="syncmode"][data-v="repo"]');
+  await wp.fill('#sync-r', 'me/kd-daten'); await wp.fill('#sync-t', 'github_pat_0123456789abcdefghij');
+  await wp.click('[data-a="syncon"]'); await wp.waitForSelector('text=Zuletzt synchronisiert');
+  const wj = JSON.parse(Buffer.from(W.content || '', 'base64').toString('utf8') || '{}');
+  ok(W.puts === 1 && wj.v === 1 && W.auth === 'Bearer github_pat_0123456789abcdefghij', 'Web-App: Repo-Datei mit Token geschrieben (UTF-8, Base64)');
+  await wctx.close();
   ok(errs.length === 0, 'keine Fehler im Artefakt-Test ' + errs.join(' | '));
   await browser.close();
   console.log(failed ? `\n${failed} Prüfung(en) fehlgeschlagen` : '\nAlle Prüfungen bestanden');
