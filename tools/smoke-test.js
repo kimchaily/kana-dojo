@@ -197,6 +197,8 @@ const ok = (cond, msg) => { console.log((cond ? '  ok   ' : '  FAIL ') + msg); i
   ok((await p.getAttribute('header a.ico', 'href')) === 'https://claude.ai/artifact/5DJdjgHBiwiwrCAFCydnFx', 'Heute: Knopf öffnet das Claude-Artefakt');
   await tab('more');
   ok((await p.getAttribute('#other a.btn', 'target')) === '_blank', 'Mehr: Abschnitt «Auch in Claude» mit Link');
+  for (const t of ['kana', 'words', 'more']) { await tab(t); ok(await p.locator('header a.ico[href*="claude.ai/artifact/"]').count() === 1, 'Wechsel-Knopf oben auf ' + t); }
+  await tab('more');
 
   ok((await p.getAttribute('#cr a[href*="claude.ai/code/session_"]', 'target')) === '_blank', 'Mehr: Knopf zum Entwicklungs-Chat');
 
