@@ -101,7 +101,7 @@ function baseForms(w) {
   return [...out];
 }
 function segment(text, jm) {
-  const pieces = toHira(text).split(/[\s、。？！?!,.・「」『』()（）〜~ー]+/).filter(Boolean);
+  const pieces = toHira(text).split(/[\s、。？！?!,.・「」『』()（）〜~]+/).filter(Boolean);
   const tokens = [], unknown = [];
   for (const p of pieces) {
     // Dynamische Zerlegung: wenig unbekannte Zeichen, dann wenig Wörter
