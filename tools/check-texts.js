@@ -2,6 +2,8 @@
 // Text-Check (#18): Vorfilter für die Prüfung durch eine Muttersprachlerin.
 //   1. Schreibung: Rōmaji und Kana müssen zueinander passen (ohne Netz, ohne Schlüssel).
 //   2. Wörterbuch: Einzelwörter gegen JMdict (Lesung, Bedeutung). Datei über JMDICT=pfad.json.
+//      Sätze, Dialogzeilen und Wendungen: in Wörter zerlegt (längste Treffer in JMdict, Partikeln,
+//      Verbformen auf die Grundform zurückgeführt). Teile ohne Treffer werden gemeldet.
 //   3. DeepL: Rückübersetzung Japanisch → Deutsch/Englisch, Vergleich mit unseren Bedeutungen.
 //      Schlüssel über DEEPL_AUTH_KEY. Ergebnisse werden in DEEPL_CACHE zwischengespeichert,
 //      damit unveränderte Texte kein Kontingent verbrauchen.
@@ -74,6 +76,57 @@ function loadJmdict(file) {
   return { byKana, byKanji, version: data.version || '', date: data.dictDate || '' };
 }
 
+// Zerlegung reiner Kana-Texte in Wörter, nur mit JMdict (ohne Morphologie-Paket).
+const PART = ['は', 'が', 'を', 'に', 'で', 'と', 'も', 'の', 'へ', 'か', 'ね', 'よ', 'から', 'まで', 'より', 'や', 'だけ', 'しか', 'でも', 'って'];
+const AUX = ['です', 'でした', 'ですか', 'じゃない', 'ではありません', 'ください', 'くださいませ'];
+const ENDS = ['ませんでした', 'ません', 'ました', 'ましょう', 'ます', 'たいです', 'たい', 'てください', 'ています', 'ている', 'ていました', 'て', 'た', 'ない', 'なかった'];
+const IROW = { 'い': 'う', 'き': 'く', 'ぎ': 'ぐ', 'し': 'す', 'ち': 'つ', 'に': 'ぬ', 'ひ': 'ふ', 'び': 'ぶ', 'み': 'む', 'り': 'る' };
+const TEROW = { 'って': ['う', 'つ', 'る'], 'んで': ['む', 'ぶ', 'ぬ'], 'いて': ['く'], 'いで': ['ぐ'], 'して': ['す'], 'った': ['う', 'つ', 'る'], 'んだ': ['む', 'ぶ', 'ぬ'], 'いた': ['く'], 'いだ': ['ぐ'], 'した': ['す'] };
+// Mögliche Grundformen einer Verb- oder Adjektivform (たべません → たべる, まよいました → まよう, いきたい → いく)
+function baseForms(w) {
+  const out = new Set();
+  for (const e of ENDS) {
+    if (!w.endsWith(e) || w.length <= e.length) continue;
+    const st = w.slice(0, -e.length);
+    out.add(st + 'る');                                   // Ichidan: たべ-ます → たべる
+    const last = st.slice(-1);
+    if (IROW[last]) out.add(st.slice(0, -1) + IROW[last]); // Godan: まよい-ます → まよう
+    if (st.endsWith('し')) out.add(st.slice(0, -1) + 'する'); // べんきょうし-ます → べんきょうする
+    if (st === 'き') out.add('くる');
+  }
+  for (const k in TEROW) if (w.endsWith(k) && w.length > k.length) TEROW[k].forEach(u => out.add(w.slice(0, -k.length) + u));
+  if (/かった$/.test(w)) out.add(w.slice(0, -3) + 'い');  // おいしかった → おいしい
+  if (/くない$/.test(w)) out.add(w.slice(0, -3) + 'い');
+  if (/(している|しています|してください)$/.test(w)) out.add(w.replace(/して(いる|います|ください)$/, 'する'));
+  return [...out];
+}
+function segment(text, jm) {
+  const pieces = toHira(text).split(/[\s、。？！?!,.・「」『』()（）〜~ー]+/).filter(Boolean);
+  const tokens = [], unknown = [];
+  for (const p of pieces) {
+    // Dynamische Zerlegung: wenig unbekannte Zeichen, dann wenig Wörter
+    const n = p.length, best = new Array(n + 1).fill(null); best[0] = { cost: 0, toks: [] };
+    for (let i = 0; i < n; i++) {
+      if (!best[i]) continue;
+      const push = (j, tok, c) => { const cand = { cost: best[i].cost + c, toks: best[i].toks.concat([tok]) }; if (!best[j] || cand.cost < best[j].cost) best[j] = cand; };
+      for (let j = Math.min(n, i + 14); j > i; j--) {
+        const w = p.slice(i, j);
+        if (jm.byKana.has(w)) push(j, { w, how: 'jmdict' }, 1);
+        else if (PART.includes(w) || AUX.includes(w)) push(j, { w, how: 'grammar' }, 1);
+        else if (/^[おご]/.test(w) && w.length > 2 && jm.byKana.has(w.slice(1))) push(j, { w, how: 'honorific' }, 1);
+        else { const b = baseForms(w).find(x => jm.byKana.has(x)); if (b) push(j, { w, how: 'form', base: b }, 1); }
+      }
+      push(i + 1, { w: p[i], how: 'unknown' }, 10);
+    }
+    const toks = best[n].toks;
+    // Aufeinanderfolgende unbekannte Zeichen zusammenfassen
+    toks.forEach(t => { const last = tokens[tokens.length - 1];
+      if (t.how === 'unknown' && last && last.how === 'unknown' && last.piece === p) last.w += t.w; else tokens.push(Object.assign({ piece: p }, t)); });
+  }
+  tokens.filter(t => t.how === 'unknown').forEach(t => unknown.push(t.w));
+  return { tokens, unknown };
+}
+
 async function deepl(texts, target, cache) {
   const out = new Array(texts.length), todo = [];
   texts.forEach((t, i) => { const h = crypto.createHash('sha1').update(target + '\u0000' + t).digest('hex'); if (cache[h] != null) out[i] = cache[h]; else todo.push({ i, t, h }); });
@@ -132,6 +185,15 @@ async function deepl(texts, target, cache) {
     if (!glosses.some(g => overlap(r.en, g))) flag(r, 1, 'Englische Bedeutung kommt in JMdict nicht vor');
   }
 
+  // 2b. Sätze, Dialogzeilen und Wendungen: in Wörter zerlegen
+  let segChecked = 0, segUnknown = 0;
+  if (jm) for (const r of res.filter(x => !isWord(x) && !hasKanji(x.k))) {
+    segChecked++;
+    const { tokens, unknown } = segment(r.k, jm);
+    r.info.push('Zerlegung: ' + tokens.map(t => t.how === 'form' ? `${t.w}(${t.base})` : t.w).join(' · '));
+    if (unknown.length) { segUnknown++; flag(r, 1, 'Teil ohne Treffer in JMdict: ' + unknown.join('、') + '. Schreibung prüfen.'); }
+  }
+
   // 3. DeepL
   let deeplNote = 'DeepL übersprungen: kein Schlüssel (DEEPL_AUTH_KEY).', sent = 0;
   if (KEY) {
@@ -163,6 +225,7 @@ async function deepl(texts, target, cache) {
     `**${res.length} Texte:** ❌ ${bad.length} wahrscheinlich falsch · ⚠️ ${check.length} prüfen · ✅ ${fine.length} unauffällig`, '',
     `- Schreibung (Rōmaji ↔ Kana): ${res.filter(r => !hasKanji(r.k)).length} Texte geprüft`,
     `- JMdict: ${jm ? `${jmChecked} Einzelwörter geprüft (Version ${jm.version} ${jm.date})` : 'übersprungen: keine Datei (JMDICT)'}`,
+    `- JMdict, Sätze und Wendungen: ${jm ? `${segChecked} in Wörter zerlegt, ${segUnknown} mit Teilen ohne Treffer` : 'übersprungen'}`,
     `- ${deeplNote}`, '',
     'Der Check ist ein Vorfilter. Unauffällig heisst nicht korrekt: Natürlichkeit und Höflichkeit prüft nur ein Mensch. DeepL rät bei reinen Kana-Texten oft, Hinweise dort mit Vorsicht lesen.', '',
     bad.length ? '## ❌ Wahrscheinlich falsch\n\n' + table(bad) + '\n' : '',
